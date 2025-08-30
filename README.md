@@ -448,7 +448,7 @@ uiget automatically reads your `tsconfig.json` and resolves path mappings:
 ```
 
 ```json
-// uiget.json - será resolvido automaticamente
+// uiget.json
 {
   "aliases": {
     "components": "@/components",

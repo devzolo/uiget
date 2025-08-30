@@ -969,13 +969,26 @@ impl ComponentInstaller {
       self.resolve_path_manually(ui_path)
     };
 
-    // Check if component directory exists
     let current_dir = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
-    let component_path = current_dir
-      .join(&resolved_ui_path)
-      .join(component_name);
+    let components_dir = current_dir.join(&resolved_ui_path);
 
-    component_path.exists()
+    // Check if component directory exists (for @svelte registry style)
+    let component_dir_path = components_dir.join(component_name);
+    if component_dir_path.exists() && component_dir_path.is_dir() {
+      return true;
+    }
+
+    // Check if component file exists (for @default registry style)
+    // Try common file extensions
+    let extensions = ["tsx", "ts", "jsx", "js", "svelte", "vue"];
+    for ext in &extensions {
+      let component_file_path = components_dir.join(format!("{}.{}", component_name, ext));
+      if component_file_path.exists() && component_file_path.is_file() {
+        return true;
+      }
+    }
+
+    false
   }
 
   /// Get list of locally installed components
@@ -1005,10 +1018,29 @@ impl ComponentInstaller {
         let path = entry.path();
         
         if path.is_dir() {
+          // Handle directory-based components (like @svelte registry)
           if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
             // Skip hidden directories and common non-component directories
             if !name.starts_with('.') && name != "index.ts" && name != "index.js" {
               installed.push(name.to_string());
+            }
+          }
+        } else if path.is_file() {
+          // Handle file-based components (like @default registry)
+          if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
+            // Skip hidden files and common non-component files
+            if !file_name.starts_with('.') && 
+               !file_name.ends_with(".d.ts") && 
+               !file_name.ends_with(".map") &&
+               file_name != "index.ts" && 
+               file_name != "index.js" {
+              
+              // Extract component name from file name (remove extension)
+              if let Some(component_name) = file_name.split('.').next() {
+                if !component_name.is_empty() {
+                  installed.push(component_name.to_string());
+                }
+              }
             }
           }
         }
@@ -1016,6 +1048,7 @@ impl ComponentInstaller {
     }
 
     installed.sort();
+    installed.dedup(); // Remove duplicates in case both file and directory exist
     Ok(installed)
   }
 
