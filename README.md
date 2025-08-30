@@ -26,10 +26,10 @@ A modern and efficient CLI tool in Rust for managing shadcn/ui components from m
 
 ```bash
 # Install directly from repository
-cargo install --git https://github.com/your-username/uiget
+cargo install --git https://github.com/devzolo/uiget
 
 # Or install locally after cloning
-git clone https://github.com/your-username/uiget
+git clone https://github.com/devzolo/uiget
 cd uiget
 cargo install --path .
 ```
@@ -38,7 +38,7 @@ cargo install --path .
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/uiget
+git clone https://github.com/devzolo/uiget
 cd uiget
 
 # Build and install
@@ -713,7 +713,7 @@ RUST_LOG=debug cargo test
 
 ## 🐛 Reporting Bugs
 
-Found a bug? [Open an issue](https://github.com/your-username/uiget/issues) with:
+Found a bug? [Open an issue](https://github.com/devzolo/uiget/issues) with:
 
 - Detailed problem description
 - Steps to reproduce
