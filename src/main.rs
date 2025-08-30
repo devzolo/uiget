@@ -142,11 +142,48 @@ async fn handle_add(
   let config = load_config(cli)?;
   let installer = ComponentInstaller::new(config)?;
 
+  // Parse component name to extract namespace if in @namespace/component format
+  let (parsed_component, parsed_registry) = if let Some(comp_name) = component {
+    parse_component_with_namespace(comp_name, registry)
+  } else {
+    (component.map(|s| s.to_string()), registry.map(|s| s.to_string()))
+  };
+
   installer
-    .install_components(component, registry, force, skip_deps)
+    .install_components(
+      parsed_component.as_deref(), 
+      parsed_registry.as_deref(), 
+      force, 
+      skip_deps
+    )
     .await?;
 
   Ok(())
+}
+
+/// Parse component name to extract namespace if in @namespace/component format
+/// Returns (component_name, registry_namespace)
+fn parse_component_with_namespace(component_name: &str, existing_registry: Option<&str>) -> (Option<String>, Option<String>) {
+  // If registry is already explicitly provided, use it as-is
+  if let Some(registry) = existing_registry {
+    return (Some(component_name.to_string()), Some(registry.to_string()));
+  }
+
+  // Check if component name contains @namespace/ pattern
+  if component_name.starts_with('@') && component_name.contains('/') {
+    if let Some(slash_pos) = component_name.find('/') {
+      let namespace = &component_name[..slash_pos]; // includes the @
+      let component = &component_name[slash_pos + 1..];
+      
+      // Only return if both parts are non-empty
+      if !namespace.is_empty() && !component.is_empty() && namespace.len() > 1 {
+        return (Some(component.to_string()), Some(namespace.to_string()));
+      }
+    }
+  }
+
+  // Default case: return component as-is
+  (Some(component_name.to_string()), existing_registry.map(|s| s.to_string()))
 }
 
 async fn handle_remove(cli: &Cli, component: &str) -> Result<()> {
@@ -185,7 +222,7 @@ async fn handle_registry(cli: &Cli, action: &RegistryAction) -> Result<()> {
     RegistryAction::Add { namespace, url } => {
       // Validate URL by creating a registry client
       let mut manager = RegistryManager::new();
-      manager.add_registry(namespace.clone(), url.clone())?;
+      manager.add_registry_with_style(namespace.clone(), url.clone(), config.style.clone())?;
 
       // Add to config
       config.set_registry(namespace.clone(), url.clone());
@@ -213,18 +250,18 @@ async fn handle_registry(cli: &Cli, action: &RegistryAction) -> Result<()> {
         println!("{} No registries configured", "!".yellow());
       } else {
         println!("{} Configured registries:", "📦".blue());
-        for (namespace, url) in &config.registries {
-          println!("  {} {} -> {}", "→".blue(), namespace.cyan(), url.blue());
+        for (namespace, registry_config) in &config.registries {
+          println!("  {} {} -> {}", "→".blue(), namespace.cyan(), registry_config.url().blue());
         }
       }
     }
 
     RegistryAction::Test { namespace } => {
-      if let Some(url) = config.get_registry_url(&namespace) {
+      if let Some(registry_config) = config.get_registry(&namespace) {
         println!("{} Testing registry '{}'...", "→".blue(), namespace.cyan());
 
         let mut manager = RegistryManager::new();
-        manager.add_registry(namespace.clone(), url.clone())?;
+        manager.add_registry_config_with_style(namespace.clone(), registry_config.clone(), config.style.clone())?;
 
         if let Some(registry) = manager.get_registry(&namespace) {
           match registry.fetch_index().await {
@@ -344,13 +381,14 @@ mod tests {
   use tempfile::TempDir;
 
   use super::*;
+  use crate::config::RegistryConfig;
 
   fn create_test_config() -> (TempDir, Config) {
     let temp_dir = TempDir::new().unwrap();
     let mut config = Config::default();
     config
       .registries
-      .insert("test".to_string(), "https://example.com".to_string());
+      .insert("test".to_string(), RegistryConfig::String("https://example.com/registry/{name}.json".to_string()));
     (temp_dir, config)
   }
 

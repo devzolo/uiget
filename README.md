@@ -1,112 +1,125 @@
 # uiget 🚀
 
-Uma ferramenta CLI em Rust moderna e eficiente para gerenciar componentes shadcn/ui de múltiplos registries com interface interativa avançada.
+A modern and efficient CLI tool in Rust for managing shadcn/ui components from multiple registries with advanced interactive interface.
 
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://choosealicense.com/licenses/mit/)
 
-## ✨ Características
+## ✨ Features
 
-- 🎯 **Menu interativo avançado** com seleção por categoria
-- 📦 **Suporte a múltiplos registries** por namespace
-- 🔄 **Resolução automática de dependências**
-- ⚡ **Interface colorida e intuitiva**
-- 🛠️ **Configuração flexível** de aliases e estrutura de projeto
-- 🔍 **Busca inteligente** de componentes
-- 📊 **Detecção de componentes desatualizados**
-- ✅ **Compatível com schema shadcn-svelte**
+- 🎯 **Advanced interactive menu** with category selection (UI, Blocks, Hooks, Libraries)
+- 📦 **Multiple registry support** by namespace with flexible configuration
+- 🔄 **Automatic dependency resolution** with intelligent detection
+- ⚡ **Colorful and intuitive interface** with visual status indicators
+- 🛠️ **Flexible configuration** of aliases and project structure
+- 🔍 **Smart search** of components across all registries
+- 📊 **Outdated component detection** with content comparison
+- ✅ **Compatible with shadcn-svelte** and shadcn/ui schemas
+- 🔧 **Full TypeScript support** with automatic path resolution
+- 🌐 **Authenticated registries** (custom headers and parameters)
+- 📝 **Intelligent placeholder processing** ($UTILS$, $COMPONENTS$, etc.)
+- 🎨 **Style support** (new-york, default) for compatible registries
 
-## 📦 Instalação
+## 📦 Installation
 
-### Via Cargo (Recomendado)
+### Via Cargo (Recommended)
 
 ```bash
-# Instalar diretamente do repositório
-cargo install --git https://github.com/seu-usuario/uiget
+# Install directly from repository
+cargo install --git https://github.com/your-username/uiget
 
-# Ou instalar localmente após clonar
-git clone https://github.com/seu-usuario/uiget
+# Or install locally after cloning
+git clone https://github.com/your-username/uiget
 cd uiget
 cargo install --path .
 ```
 
-### Compilação Manual
+### Manual Compilation
 
 ```bash
-# Clone o repositório
-git clone https://github.com/seu-usuario/uiget
+# Clone the repository
+git clone https://github.com/your-username/uiget
 cd uiget
 
-# Compile e instale
+# Build and install
 cargo build --release
 cargo install --path .
 ```
 
-### Verificação da Instalação
+### Installation Verification
 
 ```bash
-# Verificar se o comando uiget está disponível
+# Check if uiget command is available
 uiget --help
 
-# Versão instalada
+# Installed version
 uiget --version
 ```
 
-## 🚀 Início Rápido
+## 🚀 Quick Start
 
-### 1. Inicializar Configuração
+### 1. Initialize Configuration
 
 ```bash
-# Criar arquivo de configuração padrão
+# Create default configuration file
 uiget init
 
-# Com opções personalizadas
+# With custom options
 uiget init --base-color blue --css "src/styles.css"
 ```
 
-### 2. Menu Interativo
+### 2. Interactive Menu
 
 ```bash
-# Abrir menu interativo para seleção de componentes
+# Open interactive menu for component selection
 uiget add
 ```
 
-### 3. Adicionar Componentes Específicos
+### 3. Add Specific Components
 
 ```bash
-# Adicionar um componente específico
+# Add a specific component
 uiget add button
 
-# Adicionar de um registry específico
+# Add from a specific registry
 uiget add button --registry custom
 ```
 
-## 🎯 Menu Interativo Avançado
+## 🎯 Advanced Interactive Menu
 
-O `uiget` oferece uma interface interativa moderna que permite seleção eficiente de componentes:
+`uiget` offers a modern interactive interface that allows efficient component selection:
 
-### Seleção por Categoria
+### Category Selection
 
-Execute `uiget add` para abrir o menu principal:
+Run `uiget add` to open the main menu:
 
 ```bash
 ? What would you like to do?
 ❯ 🔍 Browse and select individual components
-  📦 Select ALL UI Components (52 items)     ← Seleciona TODOS instantaneamente
-  🧩 Select ALL Blocks (131 items)          ← Seleciona TODOS instantaneamente  
-  🪝 Select ALL Hooks (1 items)             ← Seleciona TODOS instantaneamente
-  📚 Select ALL Libraries (1 items)         ← Seleciona TODOS instantaneamente
+  📦 Select ALL UI Components (52 items)     ← Select ALL instantly
+  🧩 Select ALL Blocks (131 items)          ← Select ALL instantly
+  🪝 Select ALL Hooks (1 items)             ← Select ALL instantly
+  📚 Select ALL Libraries (1 items)         ← Select ALL instantly
+  ⚙️ Select ALL Other (5 items)             ← Select ALL instantly
   ❌ Cancel
 ```
 
-### Como Usar
+### Visual Status Indicators
 
-1. **↑↓** - Navegar entre opções
-2. **Enter** - Selecionar categoria completa ou abrir browser individual
-3. **Space** - Marcar/desmarcar componentes individuais
-4. **Enter final** - Confirmar e instalar seleção
+Components are displayed with clear visual indicators:
 
-### Preview e Confirmação
+- **✓** - Component installed and up-to-date
+- **⚠** - Component installed but outdated
+- **→** - Component not installed
+
+### How to Use
+
+1. **↑↓** - Navigate between options
+2. **Enter** - Select complete category or open individual browser
+3. **Space** - Mark/unmark individual components (in browser mode)
+4. **Final Enter** - Confirm and install selection
+
+### Preview and Confirmation
 
 ```bash
 ✅ Selected ALL ui (52 components)
@@ -121,81 +134,122 @@ Components to be installed:
 ? Install all 52 components? (Y/n)
 ```
 
-## 📋 Comandos Disponíveis
+### Multiple Registry Selection
 
-### Configuração Inicial
+If you have multiple registries configured, uiget will automatically ask which one to use:
 
 ```bash
-# Inicializar projeto
+? Select a registry:
+❯ default (shadcn-svelte)
+  shadcn-ui (shadcn/ui)
+  custom (my-registry)
+```
+
+## 📋 Available Commands
+
+### Initial Configuration
+
+```bash
+# Initialize project
 uiget init [--force] [--base-color COLOR] [--css PATH]
 
-# Exemplo com opções personalizadas
+# Example with custom options
 uiget init --base-color emerald --css "src/styles/globals.css"
 ```
 
-### Gerenciamento de Registries
+### Registry Management
 
 ```bash
-# Adicionar novo registry
-uiget registry add nome-registry https://meu-registry.com
+# Add new registry
+uiget registry add registry-name https://my-registry.com
 
-# Listar registries configurados
+# List configured registries
 uiget registry list
 
-# Testar conexão com registry
-uiget registry test nome-registry
+# Test registry connection
+uiget registry test registry-name
 
-# Remover registry
-uiget registry remove nome-registry
+# Remove registry
+uiget registry remove registry-name
 ```
 
-### Componentes
+### Components
 
 ```bash
-# Menu interativo
+# Interactive menu (recommended)
 uiget add
 
-# Adicionar componente específico
+# Add specific component
 uiget add button
 
-# Adicionar de registry específico
+# Add from specific registry
 uiget add button --registry custom
 
-# Adicionar forçando sobrescrita
+# Add using namespace (@namespace/component)
+uiget add @shadcn-ui/button
+
+# Add forcing overwrite
 uiget add button --force
 
-# Adicionar sem dependências
+# Add without dependencies
 uiget add button --skip-deps
 
-# Buscar componentes
+# Search components in all registries
 uiget search "data table"
 
-# Listar todos os componentes disponíveis
+# Search in specific registry
+uiget search "form" --registry shadcn-ui
+
+# List all available components
 uiget list
 
-# Listar de registry específico
+# List from specific registry
 uiget list --registry custom
 
-# Informações detalhadas do componente
+# Detailed component information
 uiget info button
 
-# Remover componente
+# Information from specific registry
+uiget info button --registry custom
+
+# Remove component (in development)
 uiget remove button
 
-# Verificar componentes desatualizados
+# Check outdated components
 uiget outdated
+
+# Check outdated in specific registry
+uiget outdated --registry custom
+
+# Update component (force reinstall)
+uiget add button --force
 ```
 
-## ⚙️ Configuração
+### Advanced Features
 
-O arquivo `uiget.json` é criado no diretório do projeto com a seguinte estrutura:
+```bash
+# Use specific configuration file
+uiget --config ./custom-config.json add button
+
+# Verbose mode for debugging
+uiget --verbose add button
+
+# Combine options
+uiget --verbose --config ./config.json add button --force --skip-deps
+```
+
+## ⚙️ Configuration
+
+The `uiget.json` file is created in the project directory with the following structure:
 
 ```json
 {
   "$schema": "https://shadcn-svelte.com/schema.json",
+  "style": "default",
   "tailwind": {
     "css": "src/app.css",
-    "baseColor": "slate"
+    "baseColor": "slate",
+    "config": "tailwind.config.js"
   },
   "aliases": {
     "components": "$lib/components",
@@ -205,208 +259,480 @@ O arquivo `uiget.json` é criado no diretório do projeto com a seguinte estrutu
     "lib": "$lib"
   },
   "registries": {
-    "default": "https://shadcn-svelte.com",
-    "custom": "https://meu-registry-personalizado.com"
+    "default": "https://shadcn-svelte.com/registry/{name}.json",
+    "shadcn-ui": {
+      "url": "https://ui.shadcn.com/registry/{style}/{name}.json",
+      "params": {
+        "version": "latest"
+      },
+      "headers": {
+        "User-Agent": "uiget-cli"
+      }
+    }
   },
-  "typescript": true
+  "typescript": {
+    "config": "tsconfig.json"
+  }
 }
 ```
 
-### Principais Diferenças do Schema Original
+### Advanced Registry Configuration
 
-- `registry` (string) → `registries` (object): Suporte a múltiplos registries
-- Namespace "default" usado como fallback
-- Aliases flexíveis para diferentes estruturas de projeto
+uiget supports two registry configuration formats:
 
-## 🏗️ Estrutura do Projeto
+#### Simple Format (String)
+
+```json
+{
+  "registries": {
+    "my-registry": "https://api.mysite.com/components/{name}.json"
+  }
+}
+```
+
+#### Advanced Format (Object)
+
+```json
+{
+  "registries": {
+    "registry-auth": {
+      "url": "https://private-registry.com/api/{name}.json",
+      "params": {
+        "api_key": "your-api-key",
+        "version": "v2"
+      },
+      "headers": {
+        "Authorization": "Bearer your-token",
+        "Content-Type": "application/json"
+      }
+    }
+  }
+}
+```
+
+### TypeScript Configuration
+
+uiget automatically resolves TypeScript paths:
+
+```json
+{
+  "typescript": true, // Uses default tsconfig.json
+  "typescript": {
+    // Or specifies custom file
+    "config": "jsconfig.json"
+  }
+}
+```
+
+### Key Differences from Original Schema
+
+- **`registry` → `registries`**: Support for multiple registries by namespace
+- **Advanced configuration**: Custom headers and parameters for authentication
+- **TypeScript resolution**: Automatic integration with tsconfig.json
+- **Smart placeholders**: Processing of $UTILS$, $COMPONENTS$, etc.
+- **Style support**: Compatibility with registries that use styles (new-york, default)
+
+## 🏗️ Project Structure
 
 ```tree
 src/
-├── main.rs          # Ponto de entrada principal
-├── cli.rs           # Definições de comandos CLI
-├── config.rs        # Estruturas de configuração
-├── registry.rs      # Cliente para registries
-└── installer.rs     # Lógica de instalação de componentes
+├── main.rs          # Main entry point
+├── cli.rs           # CLI command definitions
+├── config.rs        # Configuration structures
+├── registry.rs      # Registry client
+└── installer.rs     # Component installation logic
 ```
 
-## 📚 Exemplos Práticos
+## 📚 Practical Examples
 
-### Configuração Multi-Registry
+### Multi-Registry Configuration
 
 ```bash
-# Adicionar diferentes registries
-uiget registry add shadcn-vue https://shadcn-vue.com
-uiget registry add meus-componentes https://meus-componentes.dev
+# Add different registries
+uiget registry add shadcn-ui https://ui.shadcn.com/registry/{style}/{name}.json
+uiget registry add my-components https://my-components.dev/api/{name}.json
 
-# Instalar de registries específicos
-uiget add button --registry shadcn-vue
-uiget add custom-card --registry meus-componentes
+# Test registry connections
+uiget registry test shadcn-ui
+uiget registry test my-components
+
+# Install from specific registries
+uiget add button --registry shadcn-ui
+uiget add custom-card --registry my-components
+
+# Use @namespace/component format
+uiget add @shadcn-ui/button
+uiget add @my-components/custom-card
 ```
 
-### Busca Avançada
+### Advanced Search and Information
 
 ```bash
-# Buscar em todos os registries
+# Search in all registries
 uiget search "form"
 
-# Buscar em registry específico
-uiget search "table" --registry shadcn-vue
+# Search in specific registry
+uiget search "table" --registry shadcn-ui
 
-# Ver informações detalhadas
+# View detailed information
 uiget info data-table
+uiget info button --registry shadcn-ui
+
+# List components by category
+uiget list --registry shadcn-ui
 ```
 
-### Workflow Típico
+### Typical Development Workflow
 
 ```bash
-# 1. Inicializar projeto
-uiget init --base-color violet
+# 1. Initialize project with custom configurations
+uiget init --base-color violet --css "src/styles/globals.css"
 
-# 2. Adicionar registry personalizado
-uiget registry add empresa https://components.empresa.com
+# 2. Add custom registry with authentication
+uiget registry add company https://components.company.com/api/{name}.json
 
-# 3. Instalar componentes essenciais via menu
+# 3. Use interactive menu to install components
 uiget add
+# Select "📦 Select ALL UI Components" to install all at once
 
-# 4. Verificar status
-uiget list
-uiget outdated
+# 4. Check status and updates
+uiget list                    # View all available components
+uiget outdated               # Check outdated components
+uiget add button --force     # Update specific component
+
+# 5. Debug and troubleshooting
+uiget --verbose add card     # Verbose mode for debugging
 ```
 
-## 🔧 API do Registry
+### Advanced Scenarios
 
-Os registries devem implementar a seguinte estrutura:
+```bash
+# Working with TypeScript
+# uiget automatically resolves paths from tsconfig.json
+uiget add button  # Placeholders like $UTILS$ are resolved automatically
 
-### Endpoints
+# Configuration for Svelte projects
+uiget init --components "$lib/components" --utils "$lib/utils"
 
-```bashl
-GET /registry/index.json              # Lista de componentes
-GET /registry/components/{name}.json  # Detalhes do componente
+# Configuration for React/Next.js projects
+uiget init --components "./components" --utils "./lib/utils"
+
+# Use registry with specific style
+uiget registry add shadcn-ny https://ui.shadcn.com/registry/new-york/{name}.json
+uiget add button --registry shadcn-ny
+
+# Install without dependencies (useful for development)
+uiget add complex-component --skip-deps
 ```
 
-### Formato do Componente
+## 🔧 TypeScript Integration
+
+uiget offers full TypeScript support with advanced features:
+
+### Automatic Path Resolution
+
+uiget automatically reads your `tsconfig.json` and resolves path mappings:
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/utils/*": ["./src/lib/utils/*"]
+    }
+  }
+}
+```
+
+```json
+// uiget.json - será resolvido automaticamente
+{
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/utils",
+    "ui": "@/components/ui"
+  }
+}
+```
+
+### Intelligent Import Processing
+
+uiget automatically:
+
+1. **Removes .js extensions** in TypeScript projects
+2. **Resolves placeholders** based on configuration
+3. **Normalizes paths** for the local file system
+
+```typescript
+// Before (from registry)
+import { cn } from "$UTILS$.js";
+import Button from "$COMPONENTS$/ui/button.js";
+
+// After (processed by uiget)
+import { cn } from "@/utils";
+import Button from "@/components/ui/button";
+```
+
+### Extends Support
+
+uiget supports TypeScript configurations with `extends`:
+
+```json
+// tsconfig.json
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+```
+
+## 🔧 Registry API
+
+Registries must implement the following structure to be compatible with uiget:
+
+### Supported Endpoints
+
+```bash
+# Component index (multiple formats supported)
+GET /registry/index.json                    # Array format (shadcn-svelte)
+GET /r/index.json                          # shadcn/ui format
+GET /{style}/index.json                    # With style support
+
+# Individual components
+GET /registry/{name}.json                  # Basic format
+GET /registry/{style}/{name}.json          # With style
+GET /api/components/{name}.json            # Custom API
+```
+
+### Index Format
+
+uiget supports two index formats:
+
+#### Array Format (shadcn-svelte)
+
+```json
+[
+  {
+    "name": "button",
+    "type": "registry:ui",
+    "registryDependencies": ["utils"],
+    "devDependencies": ["@types/node"]
+  }
+]
+```
+
+#### Object Format (shadcn/ui)
+
+```json
+{
+  "button": {
+    "name": "button",
+    "type": "registry:ui",
+    "registryDependencies": ["utils"]
+  }
+}
+```
+
+### Component Format
 
 ```json
 {
   "name": "button",
-  "description": "Um componente de botão customizável",
-  "dependencies": ["cn", "lucide-svelte"],
-  "registryDependencies": ["utils"],
+  "type": "registry:ui",
+  "registryDependencies": ["utils", "cn"],
+  "devDependencies": ["@types/react"],
   "files": [
     {
-      "name": "button.svelte",
-      "path": "$lib/components/ui/button.svelte",
-      "content": "<!-- conteúdo do componente -->",
-      "type": "component"
+      "target": "ui/button/button.tsx",
+      "content": "import { cn } from '$UTILS$';\n\n// Component...",
+      "type": "registry:ui"
+    },
+    {
+      "target": "ui/button/index.ts",
+      "content": "export { Button } from './button';"
     }
-  ],
-  "type": "ui"
+  ]
 }
 ```
 
-## 🧪 Desenvolvimento
+### Supported Placeholders
 
-### Pré-requisitos
+uiget automatically processes the following placeholders:
+
+- **`$UTILS$`** - Resolved to the configured utils alias
+- **`$COMPONENTS$`** - Resolved to the configured components alias
+- **`$HOOKS$`** - Resolved to the configured hooks alias
+- **`$LIB$`** - Resolved to the configured lib alias
+
+### Style Support
+
+For registries that support multiple styles (like shadcn/ui):
+
+```json
+{
+  "registries": {
+    "shadcn-default": "https://ui.shadcn.com/registry/default/{name}.json",
+    "shadcn-ny": "https://ui.shadcn.com/registry/new-york/{name}.json"
+  }
+}
+```
+
+### Authentication
+
+For private registries, use the advanced format:
+
+```json
+{
+  "registries": {
+    "private-registry": {
+      "url": "https://api.company.com/components/{name}.json",
+      "headers": {
+        "Authorization": "Bearer your-token-here"
+      },
+      "params": {
+        "version": "latest"
+      }
+    }
+  }
+}
+```
+
+## 🧪 Development
+
+### Prerequisites
 
 - Rust 1.70+
 - Cargo
 
-### Comandos de Desenvolvimento
+### Development Commands
 
 ```bash
-# Executar em modo debug
+# Run in debug mode
 cargo run -- --help
 
-# Executar testes
+# Run tests
 cargo test
 
-# Executar com logs debug
+# Run with debug logs
 RUST_LOG=debug cargo run -- --verbose list
 
-# Verificar linting
+# Check linting
 cargo clippy
 
-# Formatar código
+# Format code
 cargo fmt
 
-# Build otimizado
+# Optimized build
 cargo build --release
 ```
 
-### Estrutura de Testes
+### Test Structure
 
 ```bash
-# Executar todos os testes
+# Run all tests
 cargo test
 
-# Testes específicos com output
+# Specific tests with output
 cargo test test_config_loading -- --nocapture
 
-# Testes com logs
+# Tests with logs
 RUST_LOG=debug cargo test
 ```
 
-## 🤝 Contribuindo
+## 🤝 Contributing
 
-1. **Fork** o projeto
-2. **Crie** uma branch para sua feature
-
-   ```bash
-   git checkout -b feature/nova-funcionalidade
-   ```
-
-3. **Commit** suas mudanças
+1. **Fork** the project
+2. **Create** a branch for your feature
 
    ```bash
-   git commit -am 'feat: adiciona nova funcionalidade'
+   git checkout -b feature/new-feature
    ```
 
-4. **Push** para a branch
+3. **Commit** your changes
 
    ```bash
-   git push origin feature/nova-funcionalidade
+   git commit -am 'feat: add new feature'
    ```
 
-5. **Abra** um Pull Request
+4. **Push** to the branch
 
-### Guidelines de Contribuição
+   ```bash
+   git push origin feature/new-feature
+   ```
 
-- Siga as convenções de commit ([Conventional Commits](https://www.conventionalcommits.org/))
-- Adicione testes para novas funcionalidades
-- Mantenha o código formatado com `cargo fmt`
-- Execute `cargo clippy` para verificar warnings
+5. **Open** a Pull Request
 
-## 📋 Roadmap
+### Contribution Guidelines
 
-- [ ] Cache inteligente de componentes
-- [ ] Suporte a templates de projeto
-- [ ] Plugin system para extensões
-- [ ] Interface web para gerenciamento
-- [ ] Integração com VS Code
-- [ ] Suporte a React/Vue registries
+- Follow commit conventions ([Conventional Commits](https://www.conventionalcommits.org/))
+- Add tests for new features
+- Keep code formatted with `cargo fmt`
+- Run `cargo clippy` to check warnings
 
-## 🐛 Relatando Bugs
+## 📋 Implementation Status
 
-Encontrou um bug? [Abra uma issue](https://github.com/seu-usuario/uiget/issues) com:
+### ✅ Implemented Features
 
-- Descrição detalhada do problema
-- Passos para reproduzir
-- Versão do uiget (`uiget --version`)
-- Sistema operacional
-- Arquivo de configuração (sem dados sensíveis)
+- ✅ **Advanced interactive menu** with automatic categorization
+- ✅ **Multiple registries** with namespace support
+- ✅ **Automatic dependency resolution**
+- ✅ **Colorful interface** with status indicators
+- ✅ **Flexible configuration** of aliases and structure
+- ✅ **Smart search** across all registries
+- ✅ **Outdated component detection**
+- ✅ **Full TypeScript support** with path resolution
+- ✅ **Authenticated registries** (headers/params)
+- ✅ **Placeholder processing** ($UTILS$, $COMPONENTS$, etc.)
+- ✅ **Style support** (new-york, default)
+- ✅ **@namespace/component format**
+- ✅ **shadcn-svelte and shadcn/ui compatibility**
+- ✅ **Automatic .js extension removal** in TypeScript
 
-## 📄 Licença
+### 🚧 In Development
 
-Este projeto está licenciado sob a [Licença MIT](LICENSE) - veja o arquivo LICENSE para detalhes.
+- 🚧 **Update command** (currently uses `add --force`)
+- 🚧 **Remove command** (basic implementation)
 
-## 🙏 Agradecimentos
+### 📋 Future Roadmap
 
-- [shadcn/ui](https://ui.shadcn.com/) pela inspiração
-- [shadcn-svelte](https://www.shadcn-svelte.com/) pelo schema de referência
-- Comunidade Rust pelas excelentes bibliotecas
+- [ ] Intelligent component caching
+- [ ] Project template support
+- [ ] Plugin system for extensions
+- [ ] Web interface for management
+- [ ] VS Code integration
+- [ ] Native React/Vue registry support
+- [ ] Configuration backup and restore
+- [ ] Component versioning
+- [ ] Visual update diff
+
+## 🐛 Reporting Bugs
+
+Found a bug? [Open an issue](https://github.com/your-username/uiget/issues) with:
+
+- Detailed problem description
+- Steps to reproduce
+- uiget version (`uiget --version`)
+- Operating system
+- Configuration file (without sensitive data)
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE) - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- [shadcn/ui](https://ui.shadcn.com/) for inspiration
+- [shadcn-svelte](https://www.shadcn-svelte.com/) for schema reference
+- Rust community for excellent libraries
 
 ---
 
-<div align="center">
-  Feito com ❤️ em Rust
+<div align="center"> 
+Made with ❤️ in Rust
 </div>

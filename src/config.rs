@@ -3,12 +3,57 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
+/// Registry configuration - can be either a simple URL string or an object with URL, params, and headers
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(untagged)]
+pub enum RegistryConfig {
+  /// Simple URL string with {name} placeholder
+  String(String),
+  /// Full registry configuration with URL, params, and headers
+  Object {
+    /// Registry URL with {name} placeholder
+    url: String,
+    /// Optional query parameters
+    #[serde(skip_serializing_if = "Option::is_none")]
+    params: Option<HashMap<String, String>>,
+    /// Optional HTTP headers
+    #[serde(skip_serializing_if = "Option::is_none")]
+    headers: Option<HashMap<String, String>>,
+  },
+}
+
+impl RegistryConfig {
+  /// Get the URL from the registry configuration
+  pub fn url(&self) -> &str {
+    match self {
+      RegistryConfig::String(url) => url,
+      RegistryConfig::Object { url, .. } => url,
+    }
+  }
+
+  /// Get the params from the registry configuration
+  pub fn params(&self) -> Option<&HashMap<String, String>> {
+    match self {
+      RegistryConfig::String(_) => None,
+      RegistryConfig::Object { params, .. } => params.as_ref(),
+    }
+  }
+
+  /// Get the headers from the registry configuration
+  pub fn headers(&self) -> Option<&HashMap<String, String>> {
+    match self {
+      RegistryConfig::String(_) => None,
+      RegistryConfig::Object { headers, .. } => headers.as_ref(),
+    }
+  }
+}
+
 /// Default registries when not specified in config
-fn default_registries() -> HashMap<String, String> {
+fn default_registries() -> HashMap<String, RegistryConfig> {
   let mut registries = HashMap::new();
   registries.insert(
     "default".to_string(),
-    "https://shadcn-svelte.com".to_string(),
+    RegistryConfig::String("https://shadcn-svelte.com/registry/{name}.json".to_string()),
   );
   registries
 }
@@ -29,9 +74,9 @@ pub struct Config {
   /// Import aliases configuration
   pub aliases: AliasesConfig,
 
-  /// Multiple registry URLs by namespace
+  /// Multiple registry configurations by namespace
   #[serde(default = "default_registries")]
-  pub registries: HashMap<String, String>,
+  pub registries: HashMap<String, RegistryConfig>,
 
   /// TypeScript configuration
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -110,6 +155,7 @@ pub struct CompilerOptions {
 #[derive(Debug, Clone)]
 pub struct ResolvedPaths {
   pub paths: HashMap<String, String>,
+  #[allow(dead_code)]
   pub base_url: String,
 }
 
@@ -118,7 +164,7 @@ impl Default for Config {
     let mut registries = HashMap::new();
     registries.insert(
       "default".to_string(),
-      "https://shadcn-svelte.com".to_string(),
+      RegistryConfig::String("https://shadcn-svelte.com/registry/{name}.json".to_string()),
     );
 
     Self {
@@ -161,17 +207,43 @@ impl Config {
     Ok(())
   }
 
-  /// Get registry URL by namespace
-  pub fn get_registry_url(&self, namespace: &str) -> Option<&String> {
+  /// Get registry configuration by namespace
+  pub fn get_registry(&self, namespace: &str) -> Option<&RegistryConfig> {
     self
       .registries
       .get(namespace)
       .or_else(|| self.registries.get("default"))
+      .or_else(|| self.registries.get("@default"))
   }
 
-  /// Add or update a registry
+  /// Get registry URL by namespace
+  #[allow(dead_code)]
+  pub fn get_registry_url(&self, namespace: &str) -> Option<&str> {
+    self.get_registry(namespace).map(|config| config.url())
+  }
+
+  /// Add or update a registry with a simple URL
   pub fn set_registry(&mut self, namespace: String, url: String) {
-    self.registries.insert(namespace, url);
+    self.registries.insert(namespace, RegistryConfig::String(url));
+  }
+
+  /// Add or update a registry with full configuration
+  #[allow(dead_code)]
+  pub fn set_registry_config(&mut self, namespace: String, config: RegistryConfig) {
+    self.registries.insert(namespace, config);
+  }
+
+  /// Add or update a registry with URL, params, and headers
+  #[allow(dead_code)]
+  pub fn set_registry_with_config(
+    &mut self,
+    namespace: String,
+    url: String,
+    params: Option<HashMap<String, String>>,
+    headers: Option<HashMap<String, String>>,
+  ) {
+    let config = RegistryConfig::Object { url, params, headers };
+    self.registries.insert(namespace, config);
   }
 
   /// Resolve TypeScript configuration and path mappings
@@ -362,9 +434,12 @@ mod tests {
     let mut registries = HashMap::new();
     registries.insert(
       "default".to_string(),
-      "https://shadcn-svelte.com".to_string(),
+      RegistryConfig::String("https://shadcn-svelte.com/registry/{name}.json".to_string()),
     );
-    registries.insert("custom".to_string(), "https://my-registry.com".to_string());
+    registries.insert(
+      "custom".to_string(), 
+      RegistryConfig::String("https://my-registry.com/registry/{name}.json".to_string())
+    );
 
     let config = Config {
       schema: Some("https://shadcn-svelte.com/schema.json".to_string()),
@@ -402,11 +477,108 @@ mod tests {
 
     assert_eq!(
       config.get_registry_url("custom"),
-      Some(&"https://custom-registry.com".to_string())
+      Some("https://custom-registry.com")
     );
     assert_eq!(
       config.get_registry_url("nonexistent"),
-      Some(&"https://shadcn-svelte.com".to_string())
+      Some("https://shadcn-svelte.com/registry/{name}.json")
     );
+  }
+
+  #[test]
+  fn test_registry_config_schema() {
+    // Test simple string format
+    let string_config = RegistryConfig::String("https://example.com/{name}".to_string());
+    assert_eq!(string_config.url(), "https://example.com/{name}");
+    assert!(string_config.params().is_none());
+    assert!(string_config.headers().is_none());
+
+    // Test object format with all fields
+    let mut params = HashMap::new();
+    params.insert("api_key".to_string(), "test-key".to_string());
+    
+    let mut headers = HashMap::new();
+    headers.insert("Authorization".to_string(), "Bearer token".to_string());
+
+    let object_config = RegistryConfig::Object {
+      url: "https://api.example.com/components/{name}".to_string(),
+      params: Some(params.clone()),
+      headers: Some(headers.clone()),
+    };
+
+    assert_eq!(object_config.url(), "https://api.example.com/components/{name}");
+    assert_eq!(object_config.params(), Some(&params));
+    assert_eq!(object_config.headers(), Some(&headers));
+
+    // Test serialization/deserialization
+    let json_string = serde_json::to_string(&string_config).unwrap();
+    let json_object = serde_json::to_string(&object_config).unwrap();
+
+    let deserialized_string: RegistryConfig = serde_json::from_str(&json_string).unwrap();
+    let deserialized_object: RegistryConfig = serde_json::from_str(&json_object).unwrap();
+
+    assert_eq!(deserialized_string.url(), string_config.url());
+    assert_eq!(deserialized_object.url(), object_config.url());
+    assert_eq!(deserialized_object.params(), object_config.params());
+    assert_eq!(deserialized_object.headers(), object_config.headers());
+  }
+
+  #[test]
+  fn test_config_with_new_registry_schema() {
+    let mut config = Config::default();
+    
+    // Add simple string registry
+    config.set_registry("simple".to_string(), "https://simple.com".to_string());
+    
+    // Add complex registry with params and headers
+    let mut params = HashMap::new();
+    params.insert("version".to_string(), "v1".to_string());
+    
+    let mut headers = HashMap::new();
+    headers.insert("User-Agent".to_string(), "uiget-test".to_string());
+    
+    config.set_registry_with_config(
+      "complex".to_string(),
+      "https://api.complex.com/registry/{name}".to_string(),
+      Some(params),
+      Some(headers),
+    );
+
+    // Test retrieval
+    assert_eq!(config.get_registry_url("simple"), Some("https://simple.com"));
+    assert_eq!(config.get_registry_url("complex"), Some("https://api.complex.com/registry/{name}"));
+
+    let complex_config = config.get_registry("complex").unwrap();
+    assert!(complex_config.params().is_some());
+    assert!(complex_config.headers().is_some());
+
+    // Test serialization
+    let json = serde_json::to_string_pretty(&config).unwrap();
+    let deserialized: Config = serde_json::from_str(&json).unwrap();
+
+    assert_eq!(config.registries.len(), deserialized.registries.len());
+    assert_eq!(
+      config.get_registry_url("simple"),
+      deserialized.get_registry_url("simple")
+    );
+    assert_eq!(
+      config.get_registry_url("complex"),
+      deserialized.get_registry_url("complex")
+    );
+  }
+
+  #[test]
+  fn test_style_configuration() {
+    let mut config = Config::default();
+    
+    // Test that style can be set and retrieved
+    config.style = Some("new-york".to_string());
+    assert_eq!(config.style, Some("new-york".to_string()));
+
+    // Test serialization with style
+    let json = serde_json::to_string_pretty(&config).unwrap();
+    let deserialized: Config = serde_json::from_str(&json).unwrap();
+
+    assert_eq!(config.style, deserialized.style);
   }
 }

@@ -23,8 +23,12 @@ impl ComponentInstaller {
     let mut registry_manager = RegistryManager::new();
 
     // Add all registries from config
-    for (namespace, url) in &config.registries {
-      registry_manager.add_registry(namespace.clone(), url.clone())?;
+    for (namespace, registry_config) in &config.registries {
+      registry_manager.add_registry_config_with_style(
+        namespace.clone(), 
+        registry_config.clone(), 
+        config.style.clone()
+      )?;
     }
 
     // Resolve TypeScript paths if TypeScript is enabled
@@ -200,7 +204,7 @@ impl ComponentInstaller {
     let mut libs = Vec::new();
     let mut other = Vec::new();
 
-    for component in &index {
+    for component in index.as_slice() {
       match component.component_type.as_deref() {
         Some("registry:ui") => ui_components.push(component),
         Some("registry:block") => blocks.push(component),
@@ -478,7 +482,7 @@ impl ComponentInstaller {
 
   /// Install a single file
   fn install_file(&self, file: &ComponentFile, force: bool) -> Result<()> {
-    let target_path = self.resolve_file_path(&file.target)?;
+    let target_path = self.resolve_file_path(&file.get_target_path())?;
 
     // Check if file exists and force is not enabled
     if target_path.exists() && !force {
@@ -528,7 +532,15 @@ impl ComponentInstaller {
       self.resolve_path_manually(ui_path)
     };
 
-    let resolved_path = format!("{}/{}", resolved_ui_path, target);
+    // Handle path normalization for shadcn/ui components
+    let normalized_target = if target.starts_with("ui/") && resolved_ui_path.ends_with("/ui") {
+      // Remove "ui/" prefix from target to avoid duplication
+      target.strip_prefix("ui/").unwrap_or(target)
+    } else {
+      target
+    };
+
+    let resolved_path = format!("{}/{}", resolved_ui_path, normalized_target);
 
     // Convert to absolute path
     let current_dir = std::env::current_dir()?;
@@ -563,13 +575,15 @@ impl ComponentInstaller {
     // Replace $lib placeholder if present in ui_path
     if ui_path.contains("$lib") {
       if let Some(lib_path) = &self.config.aliases.lib {
-        ui_path.replace("$lib", lib_path)
+        return ui_path.replace("$lib", lib_path);
       } else {
-        ui_path.replace("$lib", "src/lib")
+        return ui_path.replace("$lib", "src/lib");
       }
-    } else {
-      ui_path.to_string()
     }
+    
+    // When there's no tsconfig.json, use the aliases exactly as configured
+    // Don't override or modify the paths - respect the user's configuration
+    ui_path.to_string()
   }
 
   /// Remove a component
@@ -681,6 +695,7 @@ impl ComponentInstaller {
   }
 
   /// Print search results (sync fallback version)
+  #[allow(dead_code)]
   fn print_search_results(&self, namespace: &str, components: &[crate::registry::ComponentInfo]) {
     if components.is_empty() {
       return;
@@ -731,7 +746,8 @@ impl ComponentInstaller {
       // List from specific registry
       if let Some(registry) = self.registry_manager.get_registry(namespace) {
         let index = registry.fetch_index().await?;
-        self.print_component_list_async(namespace, &index).await;
+        let components: Vec<_> = index.as_slice().into_iter().cloned().collect();
+        self.print_component_list_async(namespace, &components).await;
       } else {
         return Err(anyhow!("Registry '{}' not found", namespace));
       }
@@ -741,7 +757,8 @@ impl ComponentInstaller {
         if let Some(registry) = self.registry_manager.get_registry(namespace) {
           match registry.fetch_index().await {
             Ok(index) => {
-              self.print_component_list_async(namespace, &index).await;
+              let components: Vec<_> = index.as_slice().into_iter().cloned().collect();
+              self.print_component_list_async(namespace, &components).await;
             }
             Err(e) => {
               eprintln!(
@@ -821,6 +838,7 @@ impl ComponentInstaller {
   }
 
   /// Print component list (sync fallback version without outdated check)
+  #[allow(dead_code)]
   fn print_component_list(&self, namespace: &str, components: &[crate::registry::ComponentInfo]) {
     if components.is_empty() {
       return;
@@ -928,7 +946,7 @@ impl ComponentInstaller {
 
     println!("Files:");
     for file in &component.files {
-      println!("  - {}", file.target.cyan());
+      println!("  - {}", file.get_target_path().cyan());
     }
 
     Ok(())
@@ -1023,7 +1041,7 @@ impl ComponentInstaller {
 
     // Compare local files with registry files
     for registry_file in &registry_component.files {
-      let local_path = self.resolve_file_path(&registry_file.target)?;
+      let local_path = self.resolve_file_path(&registry_file.get_target_path())?;
       
       if !local_path.exists() {
         return Ok(true); // File missing locally, component is outdated
@@ -1061,6 +1079,7 @@ impl ComponentInstaller {
   }
 
   /// Get hash of local component files for comparison
+  #[allow(dead_code)]
   fn get_component_hash(&self, component_name: &str) -> Result<String> {
     let ui_path = self
       .config
@@ -1103,6 +1122,7 @@ impl ComponentInstaller {
   }
 
   /// Recursively collect all files in a component directory
+  #[allow(dead_code)]
   fn collect_component_files(&self, dir: &PathBuf, files: &mut Vec<(String, String)>) -> Result<()> {
     for entry in fs::read_dir(dir)? {
       let entry = entry?;
