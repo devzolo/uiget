@@ -1,9 +1,11 @@
+mod builder;
 mod cli;
 mod config;
 mod installer;
 mod registry;
 
 use anyhow::Result;
+use builder::RegistryBuilder;
 use clap::Parser;
 use cli::{Cli, Commands, RegistryAction};
 use colored::*;
@@ -85,6 +87,10 @@ async fn main() -> Result<()> {
 
     Commands::Outdated { ref registry } => {
       handle_outdated(&cli, registry.as_deref()).await?;
+    }
+
+    Commands::Build { ref registry, ref output } => {
+      handle_build(&cli, registry, output)?;
     }
   }
 
@@ -344,6 +350,49 @@ async fn handle_outdated(cli: &Cli, registry: Option<&str>) -> Result<()> {
       "uiget add <component> --force".cyan()
     );
   }
+
+  Ok(())
+}
+
+fn handle_build(_cli: &Cli, registry_path: &str, output_path: &str) -> Result<()> {
+  use std::path::Path;
+
+  let registry_path = Path::new(registry_path);
+  let output_path = Path::new(output_path);
+
+  if !registry_path.exists() {
+    return Err(anyhow::anyhow!(
+      "Registry file '{}' not found",
+      registry_path.display()
+    ));
+  }
+
+  println!(
+    "{} Building components from {}...", 
+    "→".blue(), 
+    registry_path.display().to_string().cyan()
+  );
+
+  let builder = RegistryBuilder::new(registry_path, output_path)?;
+  
+  println!(
+    "{} Building components to {}...",
+    "→".blue(),
+    output_path.display().to_string().cyan()
+  );
+
+  builder.build()?;
+
+  println!();
+  println!(
+    "{} Registry built successfully!",
+    "✓".green()
+  );
+  println!(
+    "  {} Generated files in {}",
+    "→".blue(),
+    output_path.display().to_string().cyan()
+  );
 
   Ok(())
 }

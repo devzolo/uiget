@@ -122,6 +122,17 @@ pub enum Commands {
     #[arg(short, long)]
     registry: Option<String>,
   },
+
+  /// Build components for a shadcn registry
+  Build {
+    /// Path to registry.json file
+    #[arg(default_value = "./registry.json")]
+    registry: String,
+
+    /// Destination directory for json files
+    #[arg(short, long, default_value = "./public/r")]
+    output: String,
+  },
 }
 
 #[derive(Subcommand)]
