@@ -137,6 +137,7 @@ impl RegistryBuilder {
       let component_info = ComponentInfo {
         name: name.clone(),
         component_type: definition.component_type.clone(),
+        dependencies: definition.dependencies.clone(),
         registry_dependencies: definition.registry_dependencies.clone(),
         dev_dependencies: definition.dev_dependencies.clone(),
         relative_url: None,
@@ -233,6 +234,7 @@ impl RegistryBuilder {
       schema: Some("https://ui.shadcn.com/schema.json".to_string()),
       name: name.to_string(),
       component_type: definition.component_type.clone(),
+      dependencies: definition.dependencies.clone(),
       dev_dependencies: definition.dev_dependencies.clone(),
       registry_dependencies: definition.registry_dependencies.clone(),
       files: component_files,

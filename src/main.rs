@@ -2,6 +2,7 @@ mod builder;
 mod cli;
 mod config;
 mod installer;
+mod package_manager;
 mod registry;
 
 use anyhow::Result;

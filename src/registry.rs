@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -15,6 +15,8 @@ pub struct Component {
   pub name: String,
   #[serde(rename = "type")]
   pub component_type: Option<String>,
+  #[serde(rename = "dependencies")]
+  pub dependencies: Option<Vec<String>>,
   #[serde(rename = "devDependencies")]
   pub dev_dependencies: Option<Vec<String>>,
   #[serde(rename = "registryDependencies")]
@@ -30,6 +32,7 @@ pub struct ComponentFile {
   pub content: String,
   #[serde(rename = "type")]
   pub file_type: Option<String>,
+  #[serde(rename = "target")]
   pub target: Option<String>,
   pub path: Option<String>,
 }
@@ -42,13 +45,13 @@ impl ComponentFile {
         return target.clone();
       }
     }
-    
+
     if let Some(path) = &self.path {
       if !path.is_empty() {
         return path.clone();
       }
     }
-    
+
     String::new()
   }
 }
@@ -103,6 +106,8 @@ pub struct ComponentInfo {
   pub name: String,
   #[serde(rename = "type")]
   pub component_type: Option<String>,
+  #[serde(rename = "dependencies")]
+  pub dependencies: Option<Vec<String>>,
   #[serde(rename = "registryDependencies")]
   pub registry_dependencies: Option<Vec<String>>,
   #[serde(rename = "devDependencies")]
@@ -168,17 +173,17 @@ impl RegistryClient {
   pub async fn fetch_index(&self) -> Result<RegistryIndex> {
     // Try different possible index endpoints
     let mut index_urls = vec![];
-    
+
     // For shadcn/ui, use the correct index endpoint: ui.shadcn.com/r/index.json
     if self.config.url().contains("ui.shadcn.com") {
       index_urls.push("https://ui.shadcn.com/r/index.json".to_string());
     }
-    
+
     // For other registries with {style} URLs, try {style}/index.json
     if self.config.url().contains("{style}") && !self.config.url().contains("ui.shadcn.com") {
       index_urls.push(self.config.url().replace("{name}", "index"));
     }
-    
+
     // Try other common patterns
     index_urls.extend(vec![
       self.config.url().replace("{name}", "index"),
@@ -220,359 +225,8 @@ impl RegistryClient {
   /// This is used when the registry doesn't provide a public index endpoint
   #[allow(dead_code)]
   fn get_shadcn_ui_fallback_components(&self) -> RegistryIndex {
-    let components = vec![
-      ComponentInfo {
-        name: "accordion".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "alert".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "alert-dialog".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "aspect-ratio".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "avatar".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "badge".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "breadcrumb".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "button".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "calendar".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "card".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "carousel".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "chart".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "checkbox".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "collapsible".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "combobox".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "command".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "context-menu".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "data-table".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "date-picker".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "dialog".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "drawer".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "dropdown-menu".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "form".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "hover-card".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "input".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "input-otp".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "label".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "menubar".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "navigation-menu".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "pagination".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "popover".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "progress".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "radio-group".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "resizable".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "scroll-area".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "select".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "separator".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "sheet".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "sidebar".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "skeleton".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "slider".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "sonner".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "switch".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "table".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "tabs".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "textarea".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "toast".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "toggle".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "toggle-group".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-      ComponentInfo {
-        name: "tooltip".to_string(),
-        component_type: Some("registry:ui".to_string()),
-        registry_dependencies: None,
-        dev_dependencies: None,
-        relative_url: None,
-      },
-    ];
-    
+    // TODO: Implement fallback components list
+    let components = vec![];
     RegistryIndex::Array(components)
   }
 
@@ -580,7 +234,7 @@ impl RegistryClient {
   pub async fn fetch_component(&self, component_name: &str) -> Result<Component> {
     // Replace {name} placeholder with component name
     let mut url = self.config.url().replace("{name}", component_name);
-    
+
     // Replace {style} placeholder if style is provided
     if let Some(style) = &self.style {
       url = url.replace("{style}", style);
@@ -598,7 +252,7 @@ impl RegistryClient {
     let response = request_builder.send().await?;
 
     if !response.status().is_success() {
-      return Err(anyhow!(
+      return Err(anyhow::anyhow!(
         "Failed to fetch component '{}': {}",
         component_name,
         response.status()
@@ -714,7 +368,7 @@ impl RegistryManager {
   pub async fn fetch_component(&self, namespace: &str, component_name: &str) -> Result<Component> {
     let registry = self
       .get_registry(namespace)
-      .ok_or_else(|| anyhow!("Registry '{}' not found", namespace))?;
+      .ok_or_else(|| anyhow::anyhow!("Registry '{}' not found", namespace))?;
 
     registry.fetch_component(component_name).await
   }
@@ -764,7 +418,7 @@ impl RegistryManager {
       }
     }
 
-    Err(anyhow!(
+    Err(anyhow::anyhow!(
       "Component '{}' not found in any registry",
       component_name
     ))
@@ -820,7 +474,7 @@ mod tests {
       "test".to_string(),
       style.clone()
     );
-    
+
     assert!(client.is_ok());
     let client = client.unwrap();
     assert_eq!(client.namespace(), "test");
@@ -834,7 +488,7 @@ mod tests {
     let style = Some("new-york".to_string());
 
     let result = manager.add_registry_with_style(
-      "test".to_string(), 
+      "test".to_string(),
       "https://example.com/styles/{style}/{name}.json".to_string(),
       style.clone()
     );
@@ -842,7 +496,7 @@ mod tests {
 
     let registry = manager.get_registry("test");
     assert!(registry.is_some());
-    
+
     let registry = registry.unwrap();
     assert_eq!(registry.style(), style.as_ref());
   }
