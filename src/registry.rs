@@ -133,13 +133,21 @@ impl RegistryClient {
   }
 
   /// Create a new registry client with style
-  pub fn new_with_style(base_url: String, namespace: String, style: Option<String>) -> Result<Self> {
+  pub fn new_with_style(
+    base_url: String,
+    namespace: String,
+    style: Option<String>,
+  ) -> Result<Self> {
     let config = RegistryConfig::String(base_url);
     Self::new_with_config(config, namespace, style)
   }
 
   /// Create a new registry client with full configuration
-  pub fn new_with_config(config: RegistryConfig, namespace: String, style: Option<String>) -> Result<Self> {
+  pub fn new_with_config(
+    config: RegistryConfig,
+    namespace: String,
+    style: Option<String>,
+  ) -> Result<Self> {
     let mut client_builder = Client::builder().user_agent("uiget-cli/0.1.0");
 
     // Add default headers from config if available
@@ -148,7 +156,7 @@ impl RegistryClient {
       for (key, value) in headers {
         if let (Ok(header_name), Ok(header_value)) = (
           reqwest::header::HeaderName::from_bytes(key.as_bytes()),
-          reqwest::header::HeaderValue::from_str(value)
+          reqwest::header::HeaderValue::from_str(value),
         ) {
           header_map.insert(header_name, header_value);
         }
@@ -188,11 +196,16 @@ impl RegistryClient {
     index_urls.extend(vec![
       self.config.url().replace("{name}", "index"),
       format!("{}/index.json", self.config.url().trim_end_matches('/')).replace("/{name}.json", ""),
-      format!("{}/registry/index.json", self.config.url().trim_end_matches('/')).replace("/{name}.json", ""),
+      format!(
+        "{}/registry/index.json",
+        self.config.url().trim_end_matches('/')
+      )
+      .replace("/{name}.json", ""),
     ]);
 
     for mut url in index_urls {
-      // Replace {style} placeholder if style is provided (except for the main shadcn index)
+      // Replace {style} placeholder if style is provided (except for the main shadcn
+      // index)
       if let Some(style) = &self.style {
         if !url.starts_with("https://ui.shadcn.com/r/index.json") {
           url = url.replace("{style}", style);
@@ -333,7 +346,12 @@ impl RegistryManager {
   }
 
   /// Add a registry with simple URL and style
-  pub fn add_registry_with_style(&mut self, namespace: String, url: String, style: Option<String>) -> Result<()> {
+  pub fn add_registry_with_style(
+    &mut self,
+    namespace: String,
+    url: String,
+    style: Option<String>,
+  ) -> Result<()> {
     let client = RegistryClient::new_with_style(url, namespace.clone(), style)?;
     self.registries.insert(namespace, client);
     Ok(())
@@ -348,7 +366,12 @@ impl RegistryManager {
   }
 
   /// Add a registry with full configuration and style
-  pub fn add_registry_config_with_style(&mut self, namespace: String, config: RegistryConfig, style: Option<String>) -> Result<()> {
+  pub fn add_registry_config_with_style(
+    &mut self,
+    namespace: String,
+    config: RegistryConfig,
+    style: Option<String>,
+  ) -> Result<()> {
     let client = RegistryClient::new_with_config(config, namespace.clone(), style)?;
     self.registries.insert(namespace, client);
     Ok(())
@@ -472,13 +495,16 @@ mod tests {
     let client = RegistryClient::new_with_style(
       "https://example.com/styles/{style}/{name}.json".to_string(),
       "test".to_string(),
-      style.clone()
+      style.clone(),
     );
 
     assert!(client.is_ok());
     let client = client.unwrap();
     assert_eq!(client.namespace(), "test");
-    assert_eq!(client.base_url(), "https://example.com/styles/{style}/{name}.json");
+    assert_eq!(
+      client.base_url(),
+      "https://example.com/styles/{style}/{name}.json"
+    );
     assert_eq!(client.style(), style.as_ref());
   }
 
@@ -490,7 +516,7 @@ mod tests {
     let result = manager.add_registry_with_style(
       "test".to_string(),
       "https://example.com/styles/{style}/{name}.json".to_string(),
-      style.clone()
+      style.clone(),
     );
     assert!(result.is_ok());
 

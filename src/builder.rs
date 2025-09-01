@@ -1,6 +1,8 @@
-use std::collections::HashMap;
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::{
+  collections::HashMap,
+  fs,
+  path::{Path, PathBuf},
+};
 
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
@@ -207,7 +209,7 @@ impl RegistryBuilder {
     let mut component_files = Vec::new();
     for file_source in file_sources {
       let source_path = self.base_path.join(&file_source.source);
-      
+
       if !source_path.exists() {
         return Err(anyhow!(
           "Source file '{}' not found for component '{}'",
@@ -256,7 +258,9 @@ impl RegistryBuilder {
     fs::write(&component_path, component_content)
       .map_err(|e| anyhow!("Failed to write component file: {}", e))?;
 
-    let relative_path = component_path.strip_prefix(&self.output_path).unwrap_or(&component_path);
+    let relative_path = component_path
+      .strip_prefix(&self.output_path)
+      .unwrap_or(&component_path);
     println!("✓ Generated {}", relative_path.display());
 
     Ok(())
@@ -280,8 +284,9 @@ impl RegistryBuilder {
 
 #[cfg(test)]
 mod tests {
-  use super::*;
   use std::io::Write;
+
+  use super::*;
 
   #[test]
   fn test_registry_config_parsing() {

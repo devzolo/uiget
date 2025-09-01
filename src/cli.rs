@@ -169,21 +169,20 @@ impl Cli {
       std::path::PathBuf::from(config_path)
     } else {
       // Default to current directory
-      let current_dir = std::env::current_dir()
-        .unwrap_or_else(|_| std::path::PathBuf::from("."));
-      
+      let current_dir = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+
       // Try uiget.json first
       let uiget_path = current_dir.join("uiget.json");
       if uiget_path.exists() {
         return uiget_path;
       }
-      
+
       // Fallback to components.json (shadcn default)
       let components_path = current_dir.join("components.json");
       if components_path.exists() {
         return components_path;
       }
-      
+
       // Return uiget.json as default for new configurations
       uiget_path
     }

@@ -1,9 +1,12 @@
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::{
+  collections::HashMap,
+  path::{Path, PathBuf},
+};
 
 use serde::{Deserialize, Serialize};
 
-/// Registry configuration - can be either a simple URL string or an object with URL, params, and headers
+/// Registry configuration - can be either a simple URL string or an object with
+/// URL, params, and headers
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 pub enum RegistryConfig {
@@ -136,7 +139,7 @@ pub enum TypeScriptConfig {
 pub struct TsConfig {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub extends: Option<String>,
-  
+
   #[serde(rename = "compilerOptions", skip_serializing_if = "Option::is_none")]
   pub compiler_options: Option<CompilerOptions>,
 }
@@ -146,7 +149,7 @@ pub struct TsConfig {
 pub struct CompilerOptions {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub paths: Option<HashMap<String, Vec<String>>>,
-  
+
   #[serde(rename = "baseUrl", skip_serializing_if = "Option::is_none")]
   pub base_url: Option<String>,
 }
@@ -224,7 +227,9 @@ impl Config {
 
   /// Add or update a registry with a simple URL
   pub fn set_registry(&mut self, namespace: String, url: String) {
-    self.registries.insert(namespace, RegistryConfig::String(url));
+    self
+      .registries
+      .insert(namespace, RegistryConfig::String(url));
   }
 
   /// Add or update a registry with full configuration
@@ -242,7 +247,11 @@ impl Config {
     params: Option<HashMap<String, String>>,
     headers: Option<HashMap<String, String>>,
   ) {
-    let config = RegistryConfig::Object { url, params, headers };
+    let config = RegistryConfig::Object {
+      url,
+      params,
+      headers,
+    };
     self.registries.insert(namespace, config);
   }
 
@@ -253,9 +262,7 @@ impl Config {
         // Default to tsconfig.json in current directory
         self.resolve_tsconfig_paths("tsconfig.json")
       }
-      Some(TypeScriptConfig::Object { config }) => {
-        self.resolve_tsconfig_paths(config)
-      }
+      Some(TypeScriptConfig::Object { config }) => self.resolve_tsconfig_paths(config),
       _ => Ok(None),
     }
   }
@@ -263,18 +270,18 @@ impl Config {
   /// Resolve paths from a specific tsconfig file
   fn resolve_tsconfig_paths(&self, config_path: &str) -> anyhow::Result<Option<ResolvedPaths>> {
     let config_path = Path::new(config_path);
-    
+
     if !config_path.exists() {
       return Ok(None);
     }
 
     let resolved_config = self.resolve_tsconfig_with_extends(config_path)?;
-    
+
     if let Some(compiler_options) = resolved_config.compiler_options {
       if let Some(paths) = compiler_options.paths {
         let base_url = compiler_options.base_url.unwrap_or_else(|| ".".to_string());
         let resolved_paths = self.resolve_path_mappings(paths, config_path, &base_url)?;
-        
+
         return Ok(Some(ResolvedPaths {
           paths: resolved_paths,
           base_url,
@@ -288,7 +295,7 @@ impl Config {
   /// Resolve tsconfig.json with extends support
   fn resolve_tsconfig_with_extends(&self, config_path: &Path) -> anyhow::Result<TsConfig> {
     let content = std::fs::read_to_string(config_path)?;
-    
+
     // Parse JSON5 content (supports comments, trailing commas, etc.)
     let mut config: TsConfig = json5::from_str(&content)
       .map_err(|e| anyhow::anyhow!("Failed to parse tsconfig.json: {}", e))?;
@@ -297,10 +304,10 @@ impl Config {
     if let Some(extends_path) = &config.extends {
       let base_dir = config_path.parent().unwrap_or(Path::new("."));
       let extended_config_path = base_dir.join(extends_path);
-      
+
       if extended_config_path.exists() {
         let extended_config = self.resolve_tsconfig_with_extends(&extended_config_path)?;
-        
+
         // Merge compiler options
         if let Some(extended_compiler_options) = extended_config.compiler_options {
           if let Some(ref mut compiler_options) = config.compiler_options {
@@ -311,7 +318,7 @@ impl Config {
                 current_paths.entry(key).or_insert(value);
               }
             }
-            
+
             // Use base_url from extended config if not present
             if compiler_options.base_url.is_none() {
               compiler_options.base_url = extended_compiler_options.base_url;
@@ -343,7 +350,7 @@ impl Config {
         // Remove wildcard suffix from alias and target
         let clean_alias = alias.trim_end_matches("/*").trim_end_matches("*");
         let clean_target = target.trim_end_matches("/*").trim_end_matches("*");
-        
+
         // Resolve relative paths
         let resolved_target = if clean_target.starts_with("./") || clean_target.starts_with("../") {
           base_path.join(clean_target)
@@ -351,10 +358,11 @@ impl Config {
           base_path.join(clean_target)
         };
 
-        // Simplify the path without canonicalizing (which can cause UNC path issues on Windows)
+        // Simplify the path without canonicalizing (which can cause UNC path issues on
+        // Windows)
         let simplified_target = self.simplify_path(&resolved_target);
 
-        // Convert to relative path from current working directory  
+        // Convert to relative path from current working directory
         let current_dir = std::env::current_dir().unwrap_or_else(|_| Path::new(".").to_path_buf());
         let relative_target = if let Ok(relative) = simplified_target.strip_prefix(&current_dir) {
           relative.to_path_buf()
@@ -371,11 +379,8 @@ impl Config {
           } else {
             &normalized_str
           };
-          
-          resolved_paths.insert(
-            clean_alias.to_string(),
-            clean_str.to_string()
-          );
+
+          resolved_paths.insert(clean_alias.to_string(), clean_str.to_string());
         }
       }
     }
@@ -386,7 +391,7 @@ impl Config {
   /// Simplify a path by resolving .. and . components without canonicalizing
   fn simplify_path(&self, path: &Path) -> PathBuf {
     let mut components = Vec::new();
-    
+
     for component in path.components() {
       match component {
         std::path::Component::Normal(name) => {
@@ -409,12 +414,12 @@ impl Config {
         }
       }
     }
-    
+
     let mut result = PathBuf::new();
     for component in components {
       result.push(component);
     }
-    
+
     if result.as_os_str().is_empty() {
       PathBuf::from(".")
     } else {
@@ -437,8 +442,8 @@ mod tests {
       RegistryConfig::String("https://shadcn-svelte.com/registry/{name}.json".to_string()),
     );
     registries.insert(
-      "custom".to_string(), 
-      RegistryConfig::String("https://my-registry.com/registry/{name}.json".to_string())
+      "custom".to_string(),
+      RegistryConfig::String("https://my-registry.com/registry/{name}.json".to_string()),
     );
 
     let config = Config {
@@ -496,7 +501,7 @@ mod tests {
     // Test object format with all fields
     let mut params = HashMap::new();
     params.insert("api_key".to_string(), "test-key".to_string());
-    
+
     let mut headers = HashMap::new();
     headers.insert("Authorization".to_string(), "Bearer token".to_string());
 
@@ -506,7 +511,10 @@ mod tests {
       headers: Some(headers.clone()),
     };
 
-    assert_eq!(object_config.url(), "https://api.example.com/components/{name}");
+    assert_eq!(
+      object_config.url(),
+      "https://api.example.com/components/{name}"
+    );
     assert_eq!(object_config.params(), Some(&params));
     assert_eq!(object_config.headers(), Some(&headers));
 
@@ -526,17 +534,17 @@ mod tests {
   #[test]
   fn test_config_with_new_registry_schema() {
     let mut config = Config::default();
-    
+
     // Add simple string registry
     config.set_registry("simple".to_string(), "https://simple.com".to_string());
-    
+
     // Add complex registry with params and headers
     let mut params = HashMap::new();
     params.insert("version".to_string(), "v1".to_string());
-    
+
     let mut headers = HashMap::new();
     headers.insert("User-Agent".to_string(), "uiget-test".to_string());
-    
+
     config.set_registry_with_config(
       "complex".to_string(),
       "https://api.complex.com/registry/{name}".to_string(),
@@ -545,8 +553,14 @@ mod tests {
     );
 
     // Test retrieval
-    assert_eq!(config.get_registry_url("simple"), Some("https://simple.com"));
-    assert_eq!(config.get_registry_url("complex"), Some("https://api.complex.com/registry/{name}"));
+    assert_eq!(
+      config.get_registry_url("simple"),
+      Some("https://simple.com")
+    );
+    assert_eq!(
+      config.get_registry_url("complex"),
+      Some("https://api.complex.com/registry/{name}")
+    );
 
     let complex_config = config.get_registry("complex").unwrap();
     assert!(complex_config.params().is_some());
@@ -570,7 +584,7 @@ mod tests {
   #[test]
   fn test_style_configuration() {
     let mut config = Config::default();
-    
+
     // Test that style can be set and retrieved
     config.style = Some("new-york".to_string());
     assert_eq!(config.style, Some("new-york".to_string()));

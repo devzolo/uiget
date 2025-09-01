@@ -44,7 +44,7 @@ impl ComponentInstaller {
       registry_manager.add_registry_config_with_style(
         namespace.clone(),
         registry_config.clone(),
-        config.style.clone()
+        config.style.clone(),
       )?;
     }
 
@@ -74,19 +74,25 @@ impl ComponentInstaller {
   /// Get the appropriate alias path based on component type
   fn get_alias_for_component_type(&self, component_type: Option<&str>) -> &str {
     match component_type {
-      Some("registry:hook") => {
-        self.config.aliases.hooks.as_deref()
-          .unwrap_or(&self.config.aliases.components)
-      }
-      Some("registry:ui") => {
-        self.config.aliases.ui.as_deref()
-          .unwrap_or(&self.config.aliases.components)
-      }
+      Some("registry:hook") => self
+        .config
+        .aliases
+        .hooks
+        .as_deref()
+        .unwrap_or(&self.config.aliases.components),
+      Some("registry:ui") => self
+        .config
+        .aliases
+        .ui
+        .as_deref()
+        .unwrap_or(&self.config.aliases.components),
       Some("registry:util") => &self.config.aliases.utils,
-      Some("registry:lib") => {
-        self.config.aliases.lib.as_deref()
-          .unwrap_or(&self.config.aliases.components)
-      }
+      Some("registry:lib") => self
+        .config
+        .aliases
+        .lib
+        .as_deref()
+        .unwrap_or(&self.config.aliases.components),
       _ => &self.config.aliases.components, // Default fallback
     }
   }
@@ -176,7 +182,8 @@ impl ComponentInstaller {
     // Install component files with context
     self.install_component_files(&component, &component_context, force)?;
 
-    // Install dependencies if component has any dependencies and package manager was detected
+    // Install dependencies if component has any dependencies and package manager
+    // was detected
     let deps = ComponentDependencies {
       dependencies: component.dependencies.clone().unwrap_or_default(),
       dev_dependencies: component.dev_dependencies.clone().unwrap_or_default(),
@@ -263,7 +270,7 @@ impl ComponentInstaller {
       .check_outdated_components(&installed_components, Some(&namespace))
       .await
       .unwrap_or_default();
-    
+
     let outdated_components: std::collections::HashSet<String> = outdated_results
       .into_iter()
       .filter_map(|(name, is_outdated)| if is_outdated { Some(name) } else { None })
@@ -305,10 +312,15 @@ impl ComponentInstaller {
           } else {
             "✓"
           }
-        } else { 
-          " " 
+        } else {
+          " "
         };
-        display_items.push(format!("  {} {} {}", "→".dimmed(), status_icon, component.name));
+        display_items.push(format!(
+          "  {} {} {}",
+          "→".dimmed(),
+          status_icon,
+          component.name
+        ));
         component_map.push(Some(*component));
       }
       let end_index = display_items.len() - 1;
@@ -329,10 +341,15 @@ impl ComponentInstaller {
           } else {
             "✓"
           }
-        } else { 
-          " " 
+        } else {
+          " "
         };
-        display_items.push(format!("  {} {} {}", "→".dimmed(), status_icon, component.name));
+        display_items.push(format!(
+          "  {} {} {}",
+          "→".dimmed(),
+          status_icon,
+          component.name
+        ));
         component_map.push(Some(*component));
       }
       let end_index = display_items.len() - 1;
@@ -353,10 +370,15 @@ impl ComponentInstaller {
           } else {
             "✓"
           }
-        } else { 
-          " " 
+        } else {
+          " "
         };
-        display_items.push(format!("  {} {} {}", "→".dimmed(), status_icon, component.name));
+        display_items.push(format!(
+          "  {} {} {}",
+          "→".dimmed(),
+          status_icon,
+          component.name
+        ));
         component_map.push(Some(*component));
       }
       let end_index = display_items.len() - 1;
@@ -377,10 +399,15 @@ impl ComponentInstaller {
           } else {
             "✓"
           }
-        } else { 
-          " " 
+        } else {
+          " "
         };
-        display_items.push(format!("  {} {} {}", "→".dimmed(), status_icon, component.name));
+        display_items.push(format!(
+          "  {} {} {}",
+          "→".dimmed(),
+          status_icon,
+          component.name
+        ));
         component_map.push(Some(*component));
       }
       let end_index = display_items.len() - 1;
@@ -401,10 +428,15 @@ impl ComponentInstaller {
           } else {
             "✓"
           }
-        } else { 
-          " " 
+        } else {
+          " "
         };
-        display_items.push(format!("  {} {} {}", "→".dimmed(), status_icon, component.name));
+        display_items.push(format!(
+          "  {} {} {}",
+          "→".dimmed(),
+          status_icon,
+          component.name
+        ));
         component_map.push(Some(*component));
       }
       let end_index = display_items.len() - 1;
@@ -545,7 +577,12 @@ impl ComponentInstaller {
   }
 
   /// Install component files to the filesystem
-  fn install_component_files(&self, component: &Component, context: &ComponentContext, force: bool) -> Result<()> {
+  fn install_component_files(
+    &self,
+    component: &Component,
+    context: &ComponentContext,
+    force: bool,
+  ) -> Result<()> {
     for file in &component.files {
       self.install_file(file, context, force)?;
     }
@@ -553,7 +590,12 @@ impl ComponentInstaller {
   }
 
   /// Install a single file
-  fn install_file(&self, file: &ComponentFile, context: &ComponentContext, force: bool) -> Result<()> {
+  fn install_file(
+    &self,
+    file: &ComponentFile,
+    context: &ComponentContext,
+    force: bool,
+  ) -> Result<()> {
     let target_path = self.resolve_file_path(&file.get_target_path(), context)?;
 
     // Check if file exists and force is not enabled
@@ -600,8 +642,10 @@ impl ComponentInstaller {
     };
 
     // Handle path normalization for different component types
-    let normalized_target = if context.component_type.as_deref() == Some("registry:ui") &&
-                            target.starts_with("ui/") && resolved_alias_path.ends_with("/ui") {
+    let normalized_target = if context.component_type.as_deref() == Some("registry:ui")
+      && target.starts_with("ui/")
+      && resolved_alias_path.ends_with("/ui")
+    {
       // Remove "ui/" prefix from target to avoid duplication for UI components
       target.strip_prefix("ui/").unwrap_or(target)
     } else {
@@ -618,14 +662,18 @@ impl ComponentInstaller {
   }
 
   /// Resolve path using TypeScript path mappings
-  fn resolve_path_with_typescript(&self, ui_path: &str, ts_paths: &HashMap<String, String>) -> String {
+  fn resolve_path_with_typescript(
+    &self,
+    ui_path: &str,
+    ts_paths: &HashMap<String, String>,
+  ) -> String {
     // Try to find a matching TypeScript path mapping
     for (alias, resolved_path) in ts_paths {
       if ui_path.starts_with(alias) {
         // Replace the alias with the resolved path
         let remaining_path = ui_path.strip_prefix(alias).unwrap_or("");
         let remaining_path = remaining_path.trim_start_matches('/');
-        
+
         if remaining_path.is_empty() {
           return resolved_path.clone();
         } else {
@@ -648,7 +696,7 @@ impl ComponentInstaller {
         return ui_path.replace("$lib", "src/lib");
       }
     }
-    
+
     // When there's no tsconfig.json, use the aliases exactly as configured
     // Don't override or modify the paths - respect the user's configuration
     ui_path.to_string()
@@ -674,8 +722,6 @@ impl ComponentInstaller {
 
     Ok(())
   }
-
-
 
   /// Search components across registries
   pub async fn search_components(
@@ -705,7 +751,9 @@ impl ComponentInstaller {
       }
 
       for (namespace, components) in results {
-        self.print_search_results_async(&namespace, &components).await;
+        self
+          .print_search_results_async(&namespace, &components)
+          .await;
       }
     }
 
@@ -713,7 +761,11 @@ impl ComponentInstaller {
   }
 
   /// Print search results (async version)
-  async fn print_search_results_async(&self, namespace: &str, components: &[crate::registry::ComponentInfo]) {
+  async fn print_search_results_async(
+    &self,
+    namespace: &str,
+    components: &[crate::registry::ComponentInfo],
+  ) {
     if components.is_empty() {
       return;
     }
@@ -725,10 +777,13 @@ impl ComponentInstaller {
 
     for component in components {
       let is_installed = installed_components.contains(&component.name);
-      
+
       let (status_icon, name_display, status_text) = if is_installed {
         // Check if component is outdated
-        let is_outdated = self.is_component_outdated(&component.name, Some(namespace)).await.unwrap_or(false);
+        let is_outdated = self
+          .is_component_outdated(&component.name, Some(namespace))
+          .await
+          .unwrap_or(false);
 
         if is_outdated {
           ("⚠".yellow(), component.name.yellow(), "Outdated".yellow())
@@ -736,7 +791,11 @@ impl ComponentInstaller {
           ("✓".green(), component.name.green(), "Installed".green())
         }
       } else {
-        (" ".normal(), component.name.cyan(), "Not Installed".dimmed())
+        (
+          " ".normal(),
+          component.name.cyan(),
+          "Not Installed".dimmed(),
+        )
       };
 
       println!("  {} {} {}", "→".blue(), status_icon, name_display);
@@ -776,11 +835,15 @@ impl ComponentInstaller {
 
     for component in components {
       let is_installed = installed_components.contains(&component.name);
-      let status_icon = if is_installed { "✓".green() } else { " ".normal() };
-      let name_display = if is_installed { 
-        component.name.green() 
-      } else { 
-        component.name.cyan() 
+      let status_icon = if is_installed {
+        "✓".green()
+      } else {
+        " ".normal()
+      };
+      let name_display = if is_installed {
+        component.name.green()
+      } else {
+        component.name.cyan()
       };
 
       println!("  {} {} {}", "→".blue(), status_icon, name_display);
@@ -815,7 +878,9 @@ impl ComponentInstaller {
       if let Some(registry) = self.registry_manager.get_registry(namespace) {
         let index = registry.fetch_index().await?;
         let components: Vec<_> = index.as_slice().into_iter().cloned().collect();
-        self.print_component_list_async(namespace, &components).await;
+        self
+          .print_component_list_async(namespace, &components)
+          .await;
       } else {
         return Err(anyhow!("Registry '{}' not found", namespace));
       }
@@ -826,7 +891,9 @@ impl ComponentInstaller {
           match registry.fetch_index().await {
             Ok(index) => {
               let components: Vec<_> = index.as_slice().into_iter().cloned().collect();
-              self.print_component_list_async(namespace, &components).await;
+              self
+                .print_component_list_async(namespace, &components)
+                .await;
             }
             Err(e) => {
               eprintln!(
@@ -843,7 +910,11 @@ impl ComponentInstaller {
   }
 
   /// Print component list (async version)
-  async fn print_component_list_async(&self, namespace: &str, components: &[crate::registry::ComponentInfo]) {
+  async fn print_component_list_async(
+    &self,
+    namespace: &str,
+    components: &[crate::registry::ComponentInfo],
+  ) {
     if components.is_empty() {
       return;
     }
@@ -883,13 +954,16 @@ impl ComponentInstaller {
       };
 
       println!("  {}", type_display);
-      
+
       for component in comps {
         let is_installed = installed_components.contains(&component.name);
-        
+
         let (status_icon, name_display) = if is_installed {
           // Check if component is outdated
-          let is_outdated = self.is_component_outdated(&component.name, Some(namespace)).await.unwrap_or(false);
+          let is_outdated = self
+            .is_component_outdated(&component.name, Some(namespace))
+            .await
+            .unwrap_or(false);
 
           if is_outdated {
             ("⚠".yellow(), component.name.yellow())
@@ -899,7 +973,7 @@ impl ComponentInstaller {
         } else {
           (" ".normal(), component.name.normal())
         };
-        
+
         println!("    {} {} {}", "→".dimmed(), status_icon, name_display);
       }
     }
@@ -947,16 +1021,20 @@ impl ComponentInstaller {
       };
 
       println!("  {}", type_display);
-      
+
       for component in comps {
         let is_installed = installed_components.contains(&component.name);
-        let status_icon = if is_installed { "✓".green() } else { " ".normal() };
-        let name_display = if is_installed { 
-          component.name.green() 
-        } else { 
-          component.name.normal() 
+        let status_icon = if is_installed {
+          "✓".green()
+        } else {
+          " ".normal()
         };
-        
+        let name_display = if is_installed {
+          component.name.green()
+        } else {
+          component.name.normal()
+        };
+
         println!("    {} {} {}", "→".dimmed(), status_icon, name_display);
       }
     }
@@ -1084,7 +1162,7 @@ impl ComponentInstaller {
       for entry in fs::read_dir(&components_dir)? {
         let entry = entry?;
         let path = entry.path();
-        
+
         if path.is_dir() {
           // Handle directory-based components (like @svelte registry)
           if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
@@ -1097,12 +1175,12 @@ impl ComponentInstaller {
           // Handle file-based components (like @default registry)
           if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
             // Skip hidden files and common non-component files
-            if !file_name.starts_with('.') && 
-               !file_name.ends_with(".d.ts") && 
-               !file_name.ends_with(".map") &&
-               file_name != "index.ts" && 
-               file_name != "index.js" {
-              
+            if !file_name.starts_with('.')
+              && !file_name.ends_with(".d.ts")
+              && !file_name.ends_with(".map")
+              && file_name != "index.ts"
+              && file_name != "index.js"
+            {
               // Extract component name from file name (remove extension)
               if let Some(component_name) = file_name.split('.').next() {
                 if !component_name.is_empty() {
@@ -1121,7 +1199,11 @@ impl ComponentInstaller {
   }
 
   /// Check if an installed component is outdated compared to registry version
-  pub async fn is_component_outdated(&self, component_name: &str, registry_namespace: Option<&str>) -> Result<bool> {
+  pub async fn is_component_outdated(
+    &self,
+    component_name: &str,
+    registry_namespace: Option<&str>,
+  ) -> Result<bool> {
     // First check if component is installed
     if !self.is_component_installed(component_name) {
       return Ok(false); // Not installed, so not outdated
@@ -1129,12 +1211,20 @@ impl ComponentInstaller {
 
     // Fetch the latest version from registry
     let registry_component = if let Some(namespace) = registry_namespace {
-      match self.registry_manager.fetch_component(namespace, component_name).await {
+      match self
+        .registry_manager
+        .fetch_component(namespace, component_name)
+        .await
+      {
         Ok(comp) => comp,
         Err(_) => return Ok(false), // Can't fetch, assume not outdated
       }
     } else {
-      match self.registry_manager.fetch_component_auto(component_name).await {
+      match self
+        .registry_manager
+        .fetch_component_auto(component_name)
+        .await
+      {
         Ok(comp) => comp,
         Err(_) => return Ok(false), // Can't fetch, assume not outdated
       }
@@ -1145,8 +1235,9 @@ impl ComponentInstaller {
 
     // Compare local files with registry files
     for registry_file in &registry_component.files {
-      let local_path = self.resolve_file_path(&registry_file.get_target_path(), &component_context)?;
-      
+      let local_path =
+        self.resolve_file_path(&registry_file.get_target_path(), &component_context)?;
+
       if !local_path.exists() {
         return Ok(true); // File missing locally, component is outdated
       }
@@ -1168,11 +1259,15 @@ impl ComponentInstaller {
     Ok(false) // All files match, component is up to date
   }
 
-  /// Normalize content for comparison (removes whitespace differences and processes placeholders)
+  /// Normalize content for comparison (removes whitespace differences and
+  /// processes placeholders)
   fn normalize_content(&self, content: &str) -> String {
-    // First process placeholders to ensure both local and registry content are comparable
-    let processed_content = self.process_placeholders(content, None).unwrap_or_else(|_| content.to_string());
-    
+    // First process placeholders to ensure both local and registry content are
+    // comparable
+    let processed_content = self
+      .process_placeholders(content, None)
+      .unwrap_or_else(|_| content.to_string());
+
     // Then normalize whitespace
     processed_content
       .lines()
@@ -1227,7 +1322,11 @@ impl ComponentInstaller {
 
   /// Recursively collect all files in a component directory
   #[allow(dead_code)]
-  fn collect_component_files(&self, dir: &PathBuf, files: &mut Vec<(String, String)>) -> Result<()> {
+  fn collect_component_files(
+    &self,
+    dir: &PathBuf,
+    files: &mut Vec<(String, String)>,
+  ) -> Result<()> {
     for entry in fs::read_dir(dir)? {
       let entry = entry?;
       let path = entry.path();
@@ -1235,16 +1334,17 @@ impl ComponentInstaller {
       if path.is_file() {
         if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
           // Skip hidden files and common non-component files
-          if !file_name.starts_with('.') && 
-             !file_name.ends_with(".d.ts") && 
-             !file_name.ends_with(".map") {
-            
+          if !file_name.starts_with('.')
+            && !file_name.ends_with(".d.ts")
+            && !file_name.ends_with(".map")
+          {
             let content = fs::read_to_string(&path)?;
-            let relative_path = path.strip_prefix(dir)
+            let relative_path = path
+              .strip_prefix(dir)
               .unwrap_or(&path)
               .to_string_lossy()
               .to_string();
-            
+
             files.push((relative_path, content));
           }
         }
@@ -1258,11 +1358,17 @@ impl ComponentInstaller {
   }
 
   /// Check multiple components for outdated status
-  pub async fn check_outdated_components(&self, component_names: &[String], registry_namespace: Option<&str>) -> Result<Vec<(String, bool)>> {
+  pub async fn check_outdated_components(
+    &self,
+    component_names: &[String],
+    registry_namespace: Option<&str>,
+  ) -> Result<Vec<(String, bool)>> {
     let mut results = Vec::new();
-    
+
     for component_name in component_names {
-      let is_outdated = self.is_component_outdated(component_name, registry_namespace).await?;
+      let is_outdated = self
+        .is_component_outdated(component_name, registry_namespace)
+        .await?;
       results.push((component_name.clone(), is_outdated));
     }
 
@@ -1270,7 +1376,11 @@ impl ComponentInstaller {
   }
 
   /// Process placeholders in file content based on configuration
-  fn process_placeholders(&self, content: &str, context: Option<&ComponentContext>) -> Result<String> {
+  fn process_placeholders(
+    &self,
+    content: &str,
+    context: Option<&ComponentContext>,
+  ) -> Result<String> {
     let mut processed_content = content.to_string();
 
     // Replace $UTILS$ placeholder
@@ -1313,34 +1423,39 @@ impl ComponentInstaller {
   /// Remove .js extensions from import statements when TypeScript is enabled
   fn remove_js_extensions_from_imports(&self, content: &str) -> String {
     use regex::Regex;
-    
+
     // Pattern 1: Standard import statements with .js extensions
     // Matches: import ... from "path.js" or import ... from 'path.js'
     let import_regex = Regex::new(r#"(import\s+[^"']*["'])([^"']+)\.js(["'])"#).unwrap();
     let mut processed = import_regex.replace_all(content, "$1$2$3").to_string();
-    
-    // Pattern 2: Export statements with .js extensions  
+
+    // Pattern 2: Export statements with .js extensions
     // Matches: export ... from "path.js" or export ... from 'path.js'
     let export_regex = Regex::new(r#"(export\s+[^"']*["'])([^"']+)\.js(["'])"#).unwrap();
     processed = export_regex.replace_all(&processed, "$1$2$3").to_string();
-    
+
     // Pattern 3: Dynamic imports with .js extensions
     // Matches: import("path.js") or import('path.js')
-    let dynamic_import_regex = Regex::new(r#"(import\s*\(\s*["'])([^"']+)\.js(["']\s*\))"#).unwrap();
-    processed = dynamic_import_regex.replace_all(&processed, "$1$2$3").to_string();
-    
+    let dynamic_import_regex =
+      Regex::new(r#"(import\s*\(\s*["'])([^"']+)\.js(["']\s*\))"#).unwrap();
+    processed = dynamic_import_regex
+      .replace_all(&processed, "$1$2$3")
+      .to_string();
+
     // Pattern 4: Placeholder-specific case like $UTILS$.js
     // This handles cases where placeholders are followed by .js
     let placeholder_regex = Regex::new(r"\$([A-Z_]+)\$\.js\b").unwrap();
-    processed = placeholder_regex.replace_all(&processed, "$$1$").to_string();
-    
+    processed = placeholder_regex
+      .replace_all(&processed, "$$1$")
+      .to_string();
+
     processed
   }
 
   /// Get the utils import path based on configuration
   fn get_utils_import_path(&self) -> Option<String> {
     let utils_path = &self.config.aliases.utils;
-    
+
     // First try to resolve using TypeScript paths if available
     if let Some(ref ts_paths) = self.typescript_paths {
       let resolved = self.resolve_import_path_with_typescript(utils_path, &ts_paths.paths);
@@ -1348,7 +1463,7 @@ impl ComponentInstaller {
         return Some(resolved);
       }
     }
-    
+
     // Fallback to manual resolution
     self.resolve_import_path_manually(utils_path)
   }
@@ -1370,7 +1485,10 @@ impl ComponentInstaller {
   }
 
   /// Get the components import path with context awareness
-  fn get_components_import_path_with_context(&self, context: Option<&ComponentContext>) -> Option<String> {
+  fn get_components_import_path_with_context(
+    &self,
+    context: Option<&ComponentContext>,
+  ) -> Option<String> {
     let components_path = if let Some(ctx) = context {
       // Use the alias based on component type
       self.get_alias_for_component_type(ctx.component_type.as_deref())
@@ -1409,17 +1527,28 @@ impl ComponentInstaller {
   }
 
   /// Get the hooks import path with context awareness
-  fn get_hooks_import_path_with_context(&self, context: Option<&ComponentContext>) -> Option<String> {
+  fn get_hooks_import_path_with_context(
+    &self,
+    context: Option<&ComponentContext>,
+  ) -> Option<String> {
     let hooks_path = if let Some(ctx) = context {
       // For hooks components, use hooks alias, otherwise use the component type alias
       if ctx.component_type.as_deref() == Some("registry:hook") {
-        self.config.aliases.hooks.as_deref()
+        self
+          .config
+          .aliases
+          .hooks
+          .as_deref()
           .unwrap_or(&self.config.aliases.components)
       } else {
         self.get_alias_for_component_type(ctx.component_type.as_deref())
       }
     } else {
-      self.config.aliases.hooks.as_deref()
+      self
+        .config
+        .aliases
+        .hooks
+        .as_deref()
         .unwrap_or(&self.config.aliases.components)
     };
 
@@ -1458,13 +1587,21 @@ impl ComponentInstaller {
     let lib_path = if let Some(ctx) = context {
       // For lib components, use lib alias, otherwise use the component type alias
       if ctx.component_type.as_deref() == Some("registry:lib") {
-        self.config.aliases.lib.as_deref()
+        self
+          .config
+          .aliases
+          .lib
+          .as_deref()
           .unwrap_or(&self.config.aliases.components)
       } else {
         self.get_alias_for_component_type(ctx.component_type.as_deref())
       }
     } else {
-      self.config.aliases.lib.as_deref()
+      self
+        .config
+        .aliases
+        .lib
+        .as_deref()
         .unwrap_or(&self.config.aliases.components)
     };
 
@@ -1483,7 +1620,10 @@ impl ComponentInstaller {
   /// Install dependencies using the detected package manager
   fn install_dependencies(&self, deps: &ComponentDependencies) -> Result<()> {
     let Some(detection) = &self.package_manager else {
-      println!("{} Skipping dependency installation - no package manager detected", "!".yellow());
+      println!(
+        "{} Skipping dependency installation - no package manager detected",
+        "!".yellow()
+      );
       return Ok(());
     };
 
@@ -1513,12 +1653,21 @@ impl ComponentInstaller {
   }
 
   /// Install a specific type of dependencies (regular or dev)
-  fn install_dependency_type(&self, detection: &Detection, dependencies: &[String], is_dev: bool) -> Result<()> {
+  fn install_dependency_type(
+    &self,
+    detection: &Detection,
+    dependencies: &[String],
+    is_dev: bool,
+  ) -> Result<()> {
     if dependencies.is_empty() {
       return Ok(());
     }
 
-    let dep_type = if is_dev { "dev dependencies" } else { "dependencies" };
+    let dep_type = if is_dev {
+      "dev dependencies"
+    } else {
+      "dependencies"
+    };
     println!(
       "{} Installing {} {} with {}",
       "→".blue(),
@@ -1551,7 +1700,11 @@ impl ComponentInstaller {
   }
 
   /// Detect the best execution strategy for the package manager
-  fn detect_execution_strategy(&self, cmd: &[String], project_root: &std::path::Path) -> Option<String> {
+  fn detect_execution_strategy(
+    &self,
+    cmd: &[String],
+    project_root: &std::path::Path,
+  ) -> Option<String> {
     // Test direct execution first
     if std::process::Command::new(&cmd[0])
       .arg("--version")
@@ -1560,44 +1713,51 @@ impl ComponentInstaller {
       .stderr(std::process::Stdio::null())
       .status()
       .map(|s| s.success())
-      .unwrap_or(false) {
+      .unwrap_or(false)
+    {
       return Some("direct".to_string());
     }
 
     // Test npx for pnpm
-    if cmd[0] == "pnpm" && std::process::Command::new("npx")
-      .args(&[&cmd[0], "--version"])
-      .current_dir(project_root)
-      .stdout(std::process::Stdio::null())
-      .stderr(std::process::Stdio::null())
-      .status()
-      .map(|s| s.success())
-      .unwrap_or(false) {
+    if cmd[0] == "pnpm"
+      && std::process::Command::new("npx")
+        .args(&[&cmd[0], "--version"])
+        .current_dir(project_root)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
+    {
       return Some("npx".to_string());
     }
 
     // Test npm exec for pnpm/yarn
-    if (cmd[0] == "pnpm" || cmd[0] == "yarn") && std::process::Command::new("npm")
-      .args(&["exec", &cmd[0], "--", "--version"])
-      .current_dir(project_root)
-      .stdout(std::process::Stdio::null())
-      .stderr(std::process::Stdio::null())
-      .status()
-      .map(|s| s.success())
-      .unwrap_or(false) {
+    if (cmd[0] == "pnpm" || cmd[0] == "yarn")
+      && std::process::Command::new("npm")
+        .args(&["exec", &cmd[0], "--", "--version"])
+        .current_dir(project_root)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
+    {
       return Some("npm_exec".to_string());
     }
 
     // Test local binary
     let local_cmd_path = project_root.join("node_modules").join(".bin").join(&cmd[0]);
-    if local_cmd_path.exists() && std::process::Command::new(&local_cmd_path)
-      .arg("--version")
-      .current_dir(project_root)
-      .stdout(std::process::Stdio::null())
-      .stderr(std::process::Stdio::null())
-      .status()
-      .map(|s| s.success())
-      .unwrap_or(false) {
+    if local_cmd_path.exists()
+      && std::process::Command::new(&local_cmd_path)
+        .arg("--version")
+        .current_dir(project_root)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
+    {
       return Some("local_bin".to_string());
     }
 
@@ -1609,7 +1769,8 @@ impl ComponentInstaller {
       .stderr(std::process::Stdio::null())
       .status()
       .map(|s| s.success())
-      .unwrap_or(false) {
+      .unwrap_or(false)
+    {
       return Some("corepack".to_string());
     }
 
@@ -1622,7 +1783,8 @@ impl ComponentInstaller {
       .stderr(std::process::Stdio::null())
       .status()
       .map(|s| s.success())
-      .unwrap_or(false) {
+      .unwrap_or(false)
+    {
       return Some("cmd".to_string());
     }
 
@@ -1637,7 +1799,8 @@ impl ComponentInstaller {
         .stderr(std::process::Stdio::null())
         .status()
         .map(|s| s.success())
-        .unwrap_or(false) {
+        .unwrap_or(false)
+      {
         return Some("powershell".to_string());
       }
     }
@@ -1646,10 +1809,14 @@ impl ComponentInstaller {
   }
 
   /// Execute package manager command using the detected strategy
-  fn execute_package_manager_command(&self, cmd: &[String], project_root: &std::path::Path) -> Result<std::process::ExitStatus> {
+  fn execute_package_manager_command(
+    &self,
+    cmd: &[String],
+    project_root: &std::path::Path,
+  ) -> Result<std::process::ExitStatus> {
     // Detect the best strategy first
     let strategy = self.detect_execution_strategy(cmd, project_root);
-    
+
     match strategy.as_deref() {
       Some("direct") => {
         println!("{} Running: {}", "→".blue(), cmd.join(" ").cyan());
@@ -1658,10 +1825,15 @@ impl ComponentInstaller {
           .current_dir(project_root)
           .status()
           .map_err(Into::into)
-      },
+      }
       Some("npx") => {
-        println!("{} Running via npx: npx {}", "→".blue(), cmd.join(" ").cyan());
-        let npx_cmd = ["npx".to_string()].into_iter()
+        println!(
+          "{} Running via npx: npx {}",
+          "→".blue(),
+          cmd.join(" ").cyan()
+        );
+        let npx_cmd = ["npx".to_string()]
+          .into_iter()
           .chain(cmd.iter().cloned())
           .collect::<Vec<_>>();
         std::process::Command::new(&npx_cmd[0])
@@ -1669,30 +1841,49 @@ impl ComponentInstaller {
           .current_dir(project_root)
           .status()
           .map_err(Into::into)
-      },
+      }
       Some("npm_exec") => {
-        println!("{} Running via npm exec: npm exec {} -- {}", "→".blue(), cmd[0], cmd[1..].join(" ").cyan());
-        let npm_exec_cmd = vec!["npm".to_string(), "exec".to_string(), cmd[0].clone(), "--".to_string()]
-          .into_iter()
-          .chain(cmd[1..].iter().cloned())
-          .collect::<Vec<_>>();
+        println!(
+          "{} Running via npm exec: npm exec {} -- {}",
+          "→".blue(),
+          cmd[0],
+          cmd[1..].join(" ").cyan()
+        );
+        let npm_exec_cmd = vec![
+          "npm".to_string(),
+          "exec".to_string(),
+          cmd[0].clone(),
+          "--".to_string(),
+        ]
+        .into_iter()
+        .chain(cmd[1..].iter().cloned())
+        .collect::<Vec<_>>();
         std::process::Command::new(&npm_exec_cmd[0])
           .args(&npm_exec_cmd[1..])
           .current_dir(project_root)
           .status()
           .map_err(Into::into)
-      },
+      }
       Some("local_bin") => {
         let local_cmd_path = project_root.join("node_modules").join(".bin").join(&cmd[0]);
-        println!("{} Running local binary: {}", "→".blue(), local_cmd_path.display().to_string().cyan());
+        println!(
+          "{} Running local binary: {}",
+          "→".blue(),
+          local_cmd_path.display().to_string().cyan()
+        );
         std::process::Command::new(&local_cmd_path)
           .args(&cmd[1..])
           .current_dir(project_root)
           .status()
           .map_err(Into::into)
-      },
+      }
       Some("corepack") => {
-        println!("{} Running via corepack: corepack {} {}", "→".blue(), cmd[0], cmd[1..].join(" ").cyan());
+        println!(
+          "{} Running via corepack: corepack {} {}",
+          "→".blue(),
+          cmd[0],
+          cmd[1..].join(" ").cyan()
+        );
         let corepack_cmd = vec!["corepack".to_string(), cmd[0].clone()]
           .into_iter()
           .chain(cmd[1..].iter().cloned())
@@ -1702,10 +1893,15 @@ impl ComponentInstaller {
           .current_dir(project_root)
           .status()
           .map_err(Into::into)
-      },
+      }
       #[cfg(windows)]
       Some("cmd") => {
-        println!("{} Running via cmd: cmd /C {} {}", "→".blue(), cmd[0], cmd[1..].join(" ").cyan());
+        println!(
+          "{} Running via cmd: cmd /C {} {}",
+          "→".blue(),
+          cmd[0],
+          cmd[1..].join(" ").cyan()
+        );
         let cmd_args = vec!["/C".to_string(), cmd[0].clone()]
           .into_iter()
           .chain(cmd[1..].iter().cloned())
@@ -1715,17 +1911,21 @@ impl ComponentInstaller {
           .current_dir(project_root)
           .status()
           .map_err(Into::into)
-      },
+      }
       #[cfg(windows)]
       Some("powershell") => {
-        println!("{} Running via PowerShell: powershell -Command \"{}\"", "→".blue(), cmd.join(" ").cyan());
+        println!(
+          "{} Running via PowerShell: powershell -Command \"{}\"",
+          "→".blue(),
+          cmd.join(" ").cyan()
+        );
         let ps_command = format!("& {} {}", cmd[0], cmd[1..].join(" "));
         std::process::Command::new("powershell")
           .args(&["-Command", &ps_command])
           .current_dir(project_root)
           .status()
           .map_err(Into::into)
-      },
+      }
       _ => {
         // Fallback: try all strategies with detailed output
         self.execute_with_fallback_strategies(cmd, project_root)
@@ -1734,25 +1934,37 @@ impl ComponentInstaller {
   }
 
   /// Fallback method with all strategies (used when detection fails)
-  fn execute_with_fallback_strategies(&self, cmd: &[String], project_root: &std::path::Path) -> Result<std::process::ExitStatus> {
-    println!("{} No working strategy detected, trying all fallbacks...", "⚠".yellow());
+  fn execute_with_fallback_strategies(
+    &self,
+    cmd: &[String],
+    project_root: &std::path::Path,
+  ) -> Result<std::process::ExitStatus> {
+    println!(
+      "{} No working strategy detected, trying all fallbacks...",
+      "⚠".yellow()
+    );
 
     // First try: execute command directly
     println!("{} Direct execution attempt", "→".blue());
     match std::process::Command::new(&cmd[0])
       .args(&cmd[1..])
       .current_dir(project_root)
-      .status() {
-        Ok(status) if status.success() => {
-          println!("{} Direct execution successful", "✓".green());
-          return Ok(status);
-        },
-        Ok(status) => {
-          println!("{} Direct execution failed with exit code: {}", "✗".red(), status.code().unwrap_or(-1));
-        },
-        Err(e) => {
-          println!("{} Direct execution error: {}", "✗".red(), e);
-        }
+      .status()
+    {
+      Ok(status) if status.success() => {
+        println!("{} Direct execution successful", "✓".green());
+        return Ok(status);
+      }
+      Ok(status) => {
+        println!(
+          "{} Direct execution failed with exit code: {}",
+          "✗".red(),
+          status.code().unwrap_or(-1)
+        );
+      }
+      Err(e) => {
+        println!("{} Direct execution error: {}", "✗".red(), e);
+      }
     }
 
     // Helper function to check if a command is available (for fallback use)
@@ -1769,39 +1981,64 @@ impl ComponentInstaller {
     // Try remaining strategies in order
     // npx strategy
     if cmd[0] == "pnpm" && is_command_available("npx") {
-      println!("{} Trying with npx: npx {}", "→".blue(), cmd.join(" ").cyan());
-      let npx_cmd = ["npx".to_string()].into_iter()
+      println!(
+        "{} Trying with npx: npx {}",
+        "→".blue(),
+        cmd.join(" ").cyan()
+      );
+      let npx_cmd = ["npx".to_string()]
+        .into_iter()
         .chain(cmd.iter().cloned())
         .collect::<Vec<_>>();
       if let Ok(status) = std::process::Command::new(&npx_cmd[0])
         .args(&npx_cmd[1..])
         .current_dir(project_root)
-        .status() {
+        .status()
+      {
         if status.success() {
           println!("{} npx execution successful", "✓".green());
           return Ok(status);
         } else {
-          println!("{} npx execution failed with exit code: {}", "✗".red(), status.code().unwrap_or(-1));
+          println!(
+            "{} npx execution failed with exit code: {}",
+            "✗".red(),
+            status.code().unwrap_or(-1)
+          );
         }
       }
     }
 
     // npm exec strategy
     if (cmd[0] == "pnpm" || cmd[0] == "yarn") && is_command_available("npm") {
-      println!("{} Trying with npm exec: npm exec {} -- {}", "→".blue(), cmd[0], cmd[1..].join(" ").cyan());
-      let npm_exec_cmd = vec!["npm".to_string(), "exec".to_string(), cmd[0].clone(), "--".to_string()]
-        .into_iter()
-        .chain(cmd[1..].iter().cloned())
-        .collect::<Vec<_>>();
+      println!(
+        "{} Trying with npm exec: npm exec {} -- {}",
+        "→".blue(),
+        cmd[0],
+        cmd[1..].join(" ").cyan()
+      );
+      let npm_exec_cmd = vec![
+        "npm".to_string(),
+        "exec".to_string(),
+        cmd[0].clone(),
+        "--".to_string(),
+      ]
+      .into_iter()
+      .chain(cmd[1..].iter().cloned())
+      .collect::<Vec<_>>();
       if let Ok(status) = std::process::Command::new(&npm_exec_cmd[0])
         .args(&npm_exec_cmd[1..])
         .current_dir(project_root)
-        .status() {
+        .status()
+      {
         if status.success() {
           println!("{} npm exec execution successful", "✓".green());
           return Ok(status);
         } else {
-          println!("{} npm exec execution failed with exit code: {}", "✗".red(), status.code().unwrap_or(-1));
+          println!(
+            "{} npm exec execution failed with exit code: {}",
+            "✗".red(),
+            status.code().unwrap_or(-1)
+          );
         }
       }
     }
@@ -1809,7 +2046,12 @@ impl ComponentInstaller {
     // cmd.exe strategy (Windows)
     #[cfg(windows)]
     {
-      println!("{} Trying with cmd.exe: cmd /C {} {}", "→".blue(), cmd[0], cmd[1..].join(" ").cyan());
+      println!(
+        "{} Trying with cmd.exe: cmd /C {} {}",
+        "→".blue(),
+        cmd[0],
+        cmd[1..].join(" ").cyan()
+      );
       let cmd_args = vec!["/C".to_string(), cmd[0].clone()]
         .into_iter()
         .chain(cmd[1..].iter().cloned())
@@ -1817,12 +2059,17 @@ impl ComponentInstaller {
       if let Ok(status) = std::process::Command::new("cmd")
         .args(&cmd_args)
         .current_dir(project_root)
-        .status() {
+        .status()
+      {
         if status.success() {
           println!("{} cmd execution successful", "✓".green());
           return Ok(status);
         } else {
-          println!("{} cmd execution failed with exit code: {}", "✗".red(), status.code().unwrap_or(-1));
+          println!(
+            "{} cmd execution failed with exit code: {}",
+            "✗".red(),
+            status.code().unwrap_or(-1)
+          );
         }
       }
     }
@@ -1837,7 +2084,11 @@ impl ComponentInstaller {
   }
 
   /// Resolve import path using TypeScript path mappings
-  fn resolve_import_path_with_typescript(&self, import_path: &str, ts_paths: &HashMap<String, String>) -> String {
+  fn resolve_import_path_with_typescript(
+    &self,
+    import_path: &str,
+    ts_paths: &HashMap<String, String>,
+  ) -> String {
     // Try to find a matching TypeScript path mapping for imports
     for (alias, _) in ts_paths {
       if import_path.starts_with(alias) {
@@ -1845,7 +2096,7 @@ impl ComponentInstaller {
         return import_path.to_string();
       }
     }
-    
+
     String::new() // Return empty string if not found
   }
 
@@ -1904,13 +2155,17 @@ mod tests {
     };
 
     // Test with component target path format (like "button/button.svelte")
-    let path = installer.resolve_file_path("button/button.svelte", &context).unwrap();
+    let path = installer
+      .resolve_file_path("button/button.svelte", &context)
+      .unwrap();
     assert!(path
       .to_string_lossy()
       .contains("src/lib/components/ui/button/button.svelte"));
 
     // Test with another component target
-    let path = installer.resolve_file_path("card/index.ts", &context).unwrap();
+    let path = installer
+      .resolve_file_path("card/index.ts", &context)
+      .unwrap();
     assert!(path
       .to_string_lossy()
       .contains("src/lib/components/ui/card/index.ts"));
@@ -1922,22 +2177,40 @@ mod tests {
     let installer = ComponentInstaller::new(config).unwrap();
 
     // Test registry:ui uses ui alias
-    assert_eq!(installer.get_alias_for_component_type(Some("registry:ui")), "src/lib/components/ui");
+    assert_eq!(
+      installer.get_alias_for_component_type(Some("registry:ui")),
+      "src/lib/components/ui"
+    );
 
     // Test registry:util uses utils alias
-    assert_eq!(installer.get_alias_for_component_type(Some("registry:util")), "src/lib/utils");
+    assert_eq!(
+      installer.get_alias_for_component_type(Some("registry:util")),
+      "src/lib/utils"
+    );
 
     // Test registry:hook uses components alias (since hooks is None in test config)
-    assert_eq!(installer.get_alias_for_component_type(Some("registry:hook")), "src/lib/components");
+    assert_eq!(
+      installer.get_alias_for_component_type(Some("registry:hook")),
+      "src/lib/components"
+    );
 
     // Test registry:lib uses lib alias
-    assert_eq!(installer.get_alias_for_component_type(Some("registry:lib")), "src/lib");
+    assert_eq!(
+      installer.get_alias_for_component_type(Some("registry:lib")),
+      "src/lib"
+    );
 
     // Test unknown type uses components alias as fallback
-    assert_eq!(installer.get_alias_for_component_type(Some("registry:unknown")), "src/lib/components");
+    assert_eq!(
+      installer.get_alias_for_component_type(Some("registry:unknown")),
+      "src/lib/components"
+    );
 
     // Test None uses components alias as fallback
-    assert_eq!(installer.get_alias_for_component_type(None), "src/lib/components");
+    assert_eq!(
+      installer.get_alias_for_component_type(None),
+      "src/lib/components"
+    );
   }
 
   #[test]
